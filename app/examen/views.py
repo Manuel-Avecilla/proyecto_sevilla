@@ -314,6 +314,11 @@ def api_mp_start(request):
         if lobby.estado != 'ESPERANDO':
             return JsonResponse({'error': 'La partida ya ha comenzado.'}, status=400)
             
+        # Validar mínimo de 2 jugadores para empezar
+        player_count = lobby.jugadores.count()
+        if player_count < 2:
+            return JsonResponse({'error': 'Se necesitan al menos 2 jugadores para iniciar la partida.'}, status=400)
+            
         # Poner estado JUGANDO y elegir el primer turno
         lobby.estado = 'JUGANDO'
         first_player = lobby.jugadores.order_by('orden').first()
@@ -691,11 +696,17 @@ def api_mp_leave(request):
                     lobby.estado = 'TERMINADA'
                     lobby.save()
                 elif remaining_count == 1:
-                    # Queda solo 1 jugador. Finalizar partida sin guardar puntos
-                    lobby.estado = 'TERMINADA'
-                    last_player = lobby.jugadores.first()
-                    lobby.jugador_actual_turno = last_player.usuario if last_player else None
-                    lobby.save()
+                    if lobby.estado == 'JUGANDO':
+                        # Queda solo 1 jugador en una partida activa. Finalizar sin guardar puntos
+                        lobby.estado = 'TERMINADA'
+                        last_player = lobby.jugadores.first()
+                        lobby.jugador_actual_turno = last_player.usuario if last_player else None
+                        lobby.save()
+                    else:
+                        # Si estaba en ESPERANDO, la sala sigue abierta
+                        last_player = lobby.jugadores.first()
+                        lobby.jugador_actual_turno = last_player.usuario if last_player else None
+                        lobby.save()
                     
         return JsonResponse({'ok': True})
     except Exception as e:

@@ -656,6 +656,51 @@ def api_mp_next_panel(request):
     except Exception as e:
         return JsonResponse({'error': f'Error al avanzar: {str(e)}'}, status=500)
 
+@csrf_exempt
+def api_mp_leave(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Debe iniciar sesión.'}, status=401)
+        
+    try:
+        data = json.loads(request.body)
+        codigo = str(data.get('codigo', '')).strip().upper()
+        
+        lobby = PartidaMultijugador.objects.filter(codigo=codigo).first()
+        if not lobby:
+            return JsonResponse({'error': 'La partida no existe.'}, status=404)
+            
+        jp = lobby.jugadores.filter(usuario=request.user).first()
+        if jp:
+            with transaction.atomic():
+                # Borrar al jugador
+                jp.delete()
+                
+                # Re-ordenar el resto de jugadores
+                rest = lobby.jugadores.order_by('orden')
+                for idx, r in enumerate(rest):
+                    r.orden = idx
+                    r.save()
+                
+                # Si era su turno, pasar el turno
+                if lobby.jugador_actual_turno == request.user:
+                    pass_turn(lobby)
+                
+                # Comprobar cuántos quedan
+                remaining_count = lobby.jugadores.count()
+                if remaining_count == 0:
+                    lobby.estado = 'TERMINADA'
+                    lobby.save()
+                elif remaining_count == 1:
+                    # Queda solo 1 jugador. Finalizar partida sin guardar puntos
+                    lobby.estado = 'TERMINADA'
+                    last_player = lobby.jugadores.first()
+                    lobby.jugador_actual_turno = last_player.usuario if last_player else None
+                    lobby.save()
+                    
+        return JsonResponse({'ok': True})
+    except Exception as e:
+        return JsonResponse({'error': f'Error al abandonar la sala: {str(e)}'}, status=500)
+
 
 def StringNormalize(text):
     import unicodedata

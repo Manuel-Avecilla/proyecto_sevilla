@@ -32,4 +32,5 @@ urlpatterns = [
     path('api/multiplayer/buy-vowel', views.api_mp_buy_vowel, name='api_mp_buy_vowel'),
     path('api/multiplayer/solve', views.api_mp_solve, name='api_mp_solve'),
     path('api/multiplayer/next-panel', views.api_mp_next_panel, name='api_mp_next_panel'),
+    path('api/multiplayer/leave', views.api_mp_leave, name='api_mp_leave'),
 ]

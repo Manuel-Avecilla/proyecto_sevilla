@@ -6,7 +6,9 @@
 {% block contenido %}
 <div class="ruleta-game-container p-1 rounded-4 text-dark">
 
-  <!-- Main Game Layout Container -->
+  <!-- Toast Notification Overlay (Top center alert) -->
+  <div id="toastNotification" class="alert alert-warning animate__animated animate__fadeInDown" style="display:none; position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-weight: bold; border-radius: 12px; min-width: 280px; text-align: center;"></div>
+
   <!-- Screen 1: Login / Credentials (Used if not Django logged in) -->
   <section id="loginScreen" class="screen">
     <div class="row g-4 justify-content-center">
@@ -261,6 +263,22 @@
     </div>
   </div>
 
+  <!-- Modal: Sole Player Left (Cancelled match due to abandonment) -->
+  <div class="modal fade" id="solePlayerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content minimal-card border-danger">
+        <div class="modal-body text-center py-5">
+          <div class="mb-3">
+            <i class="bi bi-person-x-fill text-danger display-1 animate__animated animate__pulse animate__infinite"></i>
+          </div>
+          <h2 class="fw-bold text-dark mb-2">Vaya, te has quedado solo</h2>
+          <p class="fs-5 text-secondary mb-4">Los demás jugadores han abandonado la sala. La partida ha finalizado sin registrar las puntuaciones.</p>
+          <a href="{% url 'home' %}" class="btn btn-gold px-4 text-decoration-none">Volver al Inicio</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -283,6 +301,10 @@
   let lobbyCode = null;
   let pollingInterval = null;
   let isMyTurn = false;
+
+  // Seguimiento de listas para notificaciones de unirse/salir
+  let lastLobbyPlayers = [];
+  let lastGamePlayers = [];
 
   // Modales de Bootstrap
   let spinResultModalObj = null;
@@ -380,6 +402,8 @@
       const data = await api("/api/multiplayer/create", { method: "POST" });
       lobbyCode = data.codigo;
       gameMode = 'multi';
+      lastLobbyPlayers = [];
+      lastGamePlayers = [];
       setupLobbyView(true); // true = es creador
       startPolling();
     } catch (error) {
@@ -402,6 +426,8 @@
       });
       lobbyCode = code;
       gameMode = 'multi';
+      lastLobbyPlayers = [];
+      lastGamePlayers = [];
       setupLobbyView(false); // false = es invitado
       startPolling();
     } catch (error) {
@@ -410,11 +436,23 @@
     }
   }
 
-  function leaveLobby() {
+  async function leaveLobby() {
+    if (lobbyCode) {
+      try {
+        await api("/api/multiplayer/leave", {
+          method: "POST",
+          body: JSON.stringify({ codigo: lobbyCode })
+        });
+      } catch (e) {
+        console.error("Error al abandonar la sala:", e);
+      }
+    }
     stopPolling();
     lobbyCode = null;
+    lastLobbyPlayers = [];
+    lastGamePlayers = [];
     gameMode = 'single';
-    showScreen("modeSelectionScreen");
+    showScreenWithModalReset("modeSelectionScreen");
     $("modeMessage").textContent = "Has salido de la sala.";
     $("modeMessage").className = "alert alert-info text-center mt-4";
   }
@@ -463,6 +501,19 @@
       const status = await api(`/api/multiplayer/status/${lobbyCode}`);
       
       if (status.estado === 'ESPERANDO') {
+        // Notificaciones arriba de unirse o salir
+        const currentNames = status.players.map(p => p.username);
+        if (lastLobbyPlayers.length > 0) {
+          const joined = currentNames.filter(name => !lastLobbyPlayers.includes(name));
+          if (joined.length > 0) {
+            showTopNotification(`¡${joined.join(", ")} se ha unido a la sala!`, "success");
+          }
+          const left = lastLobbyPlayers.filter(name => !currentNames.includes(name));
+          if (left.length > 0) {
+            showTopNotification(`¡${left.join(", ")} ha salido de la sala!`, "warning");
+          }
+        }
+        lastLobbyPlayers = currentNames;
         renderLobbyPlayers(status.players);
       } else if (status.estado === 'JUGANDO') {
         if ($("lobbyScreen").classList.contains("active") || $("modeSelectionScreen").classList.contains("active")) {
@@ -473,7 +524,12 @@
         syncMultiplayerGame(status);
       } else if (status.estado === 'TERMINADA') {
         stopPolling();
-        showMultiplayerResults(status.players);
+        // Si queda un jugador o menos, se quedó solo
+        if (status.players.length <= 1) {
+          showSolePlayerModal();
+        } else {
+          showMultiplayerResults(status.players);
+        }
       }
     } catch (error) {
       console.error("Polling error:", error);
@@ -504,6 +560,16 @@
       currentWheelValue = status.valor_ruleta_actual;
     }
     
+    // Notificaciones de abandonos a mitad de partida
+    const currentNames = status.players.map(p => p.username);
+    if (lastGamePlayers.length > 0) {
+      const left = lastGamePlayers.filter(name => !currentNames.includes(name));
+      if (left.length > 0) {
+        showTopNotification(`¡${left.join(", ")} ha abandonado la partida!`, "danger");
+      }
+    }
+    lastGamePlayers = currentNames;
+
     players = status.players.map(p => ({
       name: p.username,
       score: p.score,
@@ -990,6 +1056,27 @@
   }
 
   async function finishGame(){
+    if (gameMode === 'multi') {
+      if (lobbyCode) {
+        try {
+          await api("/api/multiplayer/leave", {
+            method: "POST",
+            body: JSON.stringify({ codigo: lobbyCode })
+          });
+        } catch (e) {
+          console.error("Error al abandonar partida activa:", e);
+        }
+      }
+      stopPolling();
+      lobbyCode = null;
+      lastLobbyPlayers = [];
+      lastGamePlayers = [];
+      gameMode = 'single';
+      showScreenWithModalReset("modeSelectionScreen");
+      return;
+    }
+
+    // Modo Solitario
     try {
       const score = players[0].score;
       await api("/api/save-score", {
@@ -1119,6 +1206,28 @@
     spinResultModalObj?.hide();
     turnNotificationModalObj?.hide();
     showScreen(id);
+  }
+
+  // Despliega una alerta temporal en la parte superior
+  function showTopNotification(message, type = 'info') {
+    const toast = $("toastNotification");
+    toast.className = `alert alert-${type} animate__animated animate__fadeInDown`;
+    toast.textContent = message;
+    toast.style.display = "block";
+    
+    setTimeout(() => {
+      toast.className = `alert alert-${type} animate__animated animate__fadeOutUp`;
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 500);
+    }, 3500);
+  }
+
+  function showSolePlayerModal() {
+    turnNotificationModalObj?.hide();
+    spinResultModalObj?.hide();
+    const solePlayerModalObj = new bootstrap.Modal(document.getElementById("solePlayerModal"));
+    solePlayerModalObj.show();
   }
 
   function setMessage(text){

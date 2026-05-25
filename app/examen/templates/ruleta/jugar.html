@@ -72,6 +72,16 @@
           </div>
           
           <div class="mt-3">
+            <div class="mb-3 text-start">
+              <label for="numPanelsSelect" class="form-label text-dark fw-semibold small mb-1"><i class="bi bi-layers-fill text-warning me-1"></i>Número de Paneles:</label>
+              <select id="numPanelsSelect" class="form-select bg-light border-secondary-subtle">
+                <option value="3">3 Paneles</option>
+                <option value="5" selected>5 Paneles (Por defecto)</option>
+                <option value="7">7 Paneles</option>
+                <option value="10">10 Paneles</option>
+                <option value="15">15 Paneles</option>
+              </select>
+            </div>
             <button class="btn btn-secondary-outline w-100" id="btnCreateRoom">Crear una Sala</button>
             <div class="text-center my-3 position-relative">
               <hr class="border-secondary m-0">
@@ -279,6 +289,48 @@
     </div>
   </div>
 
+  <!-- Modal: Letra Correcta -->
+  <div class="modal fade" id="correctLetterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content minimal-card border-success">
+        <div class="modal-body text-center py-4">
+          <div class="mb-2"><span class="display-3">✅</span></div>
+          <h4 class="fw-bold text-success mb-1" id="correctLetterTitle">¡Correcto!</h4>
+          <p class="text-secondary m-0" id="correctLetterMsg">Tira otra vez de la ruleta.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Letra Incorrecta -->
+  <div class="modal fade" id="incorrectLetterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content minimal-card border-danger">
+        <div class="modal-body text-center py-4">
+          <div class="mb-2"><span class="display-3">❌</span></div>
+          <h4 class="fw-bold text-danger mb-1" id="incorrectLetterTitle">¡Vaya!</h4>
+          <p class="text-secondary m-0" id="incorrectLetterMsg">Esa letra no estaba en esta frase...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Resultado de Resolución -->
+  <div class="modal fade" id="solveResultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content minimal-card" id="solveResultModalContent">
+        <div class="modal-body text-center py-5">
+          <div class="mb-3" id="solveResultIcon"><span class="display-1">🎉</span></div>
+          <h2 class="fw-bold mb-2" id="solveResultTitle">¡Frase adivinada!</h2>
+          <p class="fs-5 text-secondary m-0" id="solveResultMsg"></p>
+        </div>
+        <div class="modal-footer border-0 pt-0 justify-content-center">
+          <button type="button" class="btn btn-gold px-4" data-bs-dismiss="modal">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -309,7 +361,15 @@
   // Modales de Bootstrap
   let spinResultModalObj = null;
   let turnNotificationModalObj = null;
+  let correctLetterModalObj = null;
+  let incorrectLetterModalObj = null;
+  let solveResultModalObj = null;
   let lastTurnUser = null;
+
+  // Seguimiento de eventos del servidor
+  let lastEventMessage = null;
+  let firstPollDone = false;
+  let lastHighlightLetter = null;
 
   const $ = id => document.getElementById(id);
 
@@ -317,6 +377,9 @@
   document.addEventListener("DOMContentLoaded", () => {
     spinResultModalObj = new bootstrap.Modal(document.getElementById("spinResultModal"));
     turnNotificationModalObj = new bootstrap.Modal(document.getElementById("turnNotificationModal"));
+    correctLetterModalObj = new bootstrap.Modal(document.getElementById("correctLetterModal"));
+    incorrectLetterModalObj = new bootstrap.Modal(document.getElementById("incorrectLetterModal"));
+    solveResultModalObj = new bootstrap.Modal(document.getElementById("solveResultModal"));
   });
 
   // Event Listeners de Selección de Modo
@@ -399,7 +462,11 @@
 
   async function createRoom() {
     try {
-      const data = await api("/api/multiplayer/create", { method: "POST" });
+      const numPanels = parseInt($("numPanelsSelect").value) || 5;
+      const data = await api("/api/multiplayer/create", {
+        method: "POST",
+        body: JSON.stringify({ num_paneles: numPanels })
+      });
       lobbyCode = data.codigo;
       gameMode = 'multi';
       lastLobbyPlayers = [];
@@ -594,7 +661,111 @@
     // Gestionar la ventana modal del turno del jugador
     handleTurnModal(status.jugador_actual_turno_username, isMyTurn);
 
+    // Procesar evento de juego (ultimo_mensaje_suceso)
+    processServerEvent(status.ultimo_mensaje_suceso);
+
     renderAll();
+  }
+
+  // Procesa los eventos que envia el servidor durante el polling
+  function processServerEvent(eventMsg) {
+    if (!eventMsg) return;
+
+    // En el primer poll, solo inicializamos el tracking sin disparar modales
+    if (!firstPollDone) {
+      firstPollDone = true;
+      lastEventMessage = eventMsg;
+      return;
+    }
+
+    // Si no ha cambiado, no hacer nada
+    if (eventMsg === lastEventMessage) return;
+    lastEventMessage = eventMsg;
+
+    const parts = eventMsg.split(':');
+    const eventType = parts[0];
+    const eventUser = parts[1] || '';
+    const eventLetter = parts[2] || '';
+    const eventCount = parseInt(parts[3]) || 0;
+    const isSelf = (eventUser === currentUser.username);
+
+    switch (eventType) {
+      case 'HIT':
+      case 'HIT_VOWEL':
+        lastHighlightLetter = eventLetter;
+        if (isSelf) {
+          showCorrectLetterModal(`¡La letra ${eventLetter} aparece ${eventCount} vez/veces!`, 'Tira otra vez de la ruleta.');
+        } else {
+          showCorrectLetterModal(`${eventUser} acertó con la letra ${eventLetter}`, `Aparece ${eventCount} vez/veces en la frase.`);
+        }
+        // Quitar highlight después de 2.5s
+        setTimeout(() => { lastHighlightLetter = null; renderBoard(); }, 2500);
+        break;
+
+      case 'MISS':
+      case 'MISS_VOWEL':
+        if (isSelf) {
+          showIncorrectLetterModal(`La letra ${eventLetter} no está en esta frase...`, 'Pierdes el turno.');
+        } else {
+          showIncorrectLetterModal(`${eventUser} falló con la letra ${eventLetter}`, 'La letra no estaba en la frase.');
+        }
+        break;
+
+      case 'SOLVE':
+        if (isSelf) {
+          showSolveModal(true, '¡Adivinaste la frase!', '¡Enhorabuena! Sumas 500 puntos extra por resolver el panel.');
+        } else {
+          showSolveModal(true, `¡${eventUser} ha averiguado la frase!`, 'El panel ha sido resuelto correctamente.');
+        }
+        break;
+
+      case 'FAIL_SOLVE':
+        if (isSelf) {
+          showSolveModal(false, 'Respuesta incorrecta', 'Pierdes 200 puntos y tu turno pasa al siguiente jugador.');
+        } else {
+          showSolveModal(false, `${eventUser} falló al resolver`, 'La respuesta no era correcta.');
+        }
+        break;
+
+      case 'SPIN':
+        // Ya se gestiona localmente con showSpinResultModal
+        break;
+    }
+  }
+
+  function showCorrectLetterModal(title, msg) {
+    $("correctLetterTitle").textContent = title;
+    $("correctLetterMsg").textContent = msg;
+    correctLetterModalObj?.show();
+    setTimeout(() => correctLetterModalObj?.hide(), 2500);
+  }
+
+  function showIncorrectLetterModal(title, msg) {
+    $("incorrectLetterTitle").textContent = title;
+    $("incorrectLetterMsg").textContent = msg;
+    incorrectLetterModalObj?.show();
+    setTimeout(() => incorrectLetterModalObj?.hide(), 2500);
+  }
+
+  function showSolveModal(success, title, msg) {
+    const content = $("solveResultModalContent");
+    const icon = $("solveResultIcon");
+    const titleEl = $("solveResultTitle");
+    const msgEl = $("solveResultMsg");
+
+    if (success) {
+      content.className = 'modal-content minimal-card border-success';
+      icon.innerHTML = '<span class="display-1">🎉</span>';
+      titleEl.className = 'fw-bold mb-2 text-success';
+    } else {
+      content.className = 'modal-content minimal-card border-danger';
+      icon.innerHTML = '<span class="display-1">😞</span>';
+      titleEl.className = 'fw-bold mb-2 text-danger';
+    }
+    titleEl.textContent = title;
+    msgEl.textContent = msg;
+    solveResultModalObj?.show();
+    setTimeout(() => solveResultModalObj?.hide(), 3500);
   }
 
   // Muestra modal indicando a quién le toca actuar
@@ -628,22 +799,46 @@
   function showMultiplayerResults(playersList) {
     showScreen("endScreen");
     playersList.sort((a,b) => b.score - a.score);
+    const winner = playersList[0];
+    const totalPanels = panels.length || '?';
     
     $("finalRanking").innerHTML = `
-      <p class="text-center fs-5 text-success fw-bold">¡Partida finalizada con éxito en Django!</p>
-      <h4 class="mt-4 text-warning mb-2"><i class="bi bi-trophy-fill me-1"></i> Clasificación de la Partida:</h4>
-      <div class="ranking-list">
-        ${playersList.map((p,i) => `
-          <div class="ranking-item ${p.id === currentUser.id ? 'self-user' : ''}">
-            <div class="d-flex align-items-center gap-3">
-              <div class="rank-badge ${i === 0 ? 'rank-first' : i === 1 ? 'rank-second' : i === 2 ? 'rank-third' : 'rank-other'}">
-                ${i + 1}
-              </div>
-              <span class="fw-bold text-dark">${escapeHtml(p.username)} ${p.id === currentUser.id ? '<span class="badge bg-white text-warning border border-warning ms-1">Tú</span>' : ''}</span>
-            </div>
-            <span class="text-success fw-bold fs-5">${p.score} pts</span>
-          </div>
-        `).join("")}
+      <div class="text-center mb-4">
+        <div class="display-4 mb-2">🏆</div>
+        <h3 class="text-warning fw-bold mb-1">¡${escapeHtml(winner.username)} gana la partida!</h3>
+        <p class="text-muted mb-0">${totalPanels} paneles jugados</p>
+      </div>
+      <h5 class="text-dark fw-bold mb-3"><i class="bi bi-bar-chart-fill text-warning me-2"></i>Resumen de Resultados</h5>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" style="border-radius: 12px; overflow: hidden;">
+          <thead>
+            <tr class="bg-light">
+              <th class="text-center" style="width:50px;">Puesto</th>
+              <th>Jugador</th>
+              <th class="text-end">Puntuación</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${playersList.map((p,i) => `
+              <tr class="${p.id === currentUser.id ? 'table-warning' : ''}" style="${i === 0 ? 'font-weight:700;' : ''}">
+                <td class="text-center">
+                  <div class="rank-badge mx-auto ${i === 0 ? 'rank-first' : i === 1 ? 'rank-second' : i === 2 ? 'rank-third' : 'rank-other'}">
+                    ${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)}
+                  </div>
+                </td>
+                <td>
+                  ${escapeHtml(p.username)}
+                  ${p.id === currentUser.id ? '<span class="badge bg-white text-warning border border-warning ms-1">Tú</span>' : ''}
+                  ${i === 0 ? '<span class="badge bg-warning text-dark ms-1">Ganador</span>' : ''}
+                </td>
+                <td class="text-end">
+                  <span class="${i === 0 ? 'text-success' : 'text-dark'} fw-bold fs-5">${p.score}</span>
+                  <span class="text-muted small"> pts</span>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
       </div>
     `;
   }
@@ -754,7 +949,9 @@
       if(ch === " ") return `<div class="tv-tile blank"></div>`;
       if(!/[A-ZÑ]/.test(ch)) return `<div class="tv-tile animate__animated animate__fadeIn">${ch}</div>`;
       const visible = usedLetters.includes(ch);
-      return `<div class="tv-tile ${visible ? "revealed-anim" : "hidden"}">${visible ? ch : "?"}</div>`;
+      const isHighlighted = (lastHighlightLetter && ch === lastHighlightLetter && visible);
+      const highlightClass = isHighlighted ? ' correct-highlight' : '';
+      return `<div class="tv-tile ${visible ? 'revealed-anim' + highlightClass : 'hidden'}">${visible ? ch : '?'}</div>`;
     }).join("");
   }
 
@@ -764,12 +961,14 @@
 
     const consonantHtml = consonantArray.map(l => {
       const isUsed = usedLetters.includes(l);
-      return `<button class="keycap ${isUsed ? 'used-key' : ''}" onclick="quickLetter('${l}')" ${isUsed ? 'disabled' : ''}>${l}</button>`;
+      const guessClass = getLetterGuessClass(l, isUsed);
+      return `<button class="keycap ${isUsed ? guessClass : ''}" onclick="quickLetter('${l}')" ${isUsed ? 'disabled' : ''}>${l}</button>`;
     }).join("");
 
     const vowelHtml = vowelArray.map(l => {
       const isUsed = usedLetters.includes(l);
-      return `<button class="keycap vowel-key ${isUsed ? 'used-key' : ''}" onclick="quickLetter('${l}')" ${isUsed ? 'disabled' : ''}>${l}</button>`;
+      const guessClass = getLetterGuessClass(l, isUsed);
+      return `<button class="keycap vowel-key ${isUsed ? guessClass : ''}" onclick="quickLetter('${l}')" ${isUsed ? 'disabled' : ''}>${l}</button>`;
     }).join("");
 
     $("letters").innerHTML = `
@@ -940,6 +1139,10 @@
           ? `La vocal ${letter} aparece ${occurrences} vez/veces.`
           : `¡Excelente! La consonante ${letter} aparece ${occurrences} vez/veces. Sumas ${gained} puntos.`
       );
+      // Mostrar modal de éxito y resaltar la letra en el tablero
+      lastHighlightLetter = letter;
+      showCorrectLetterModal(`¡La letra ${letter} aparece ${occurrences} vez/veces!`, 'Tira otra vez de la ruleta.');
+      setTimeout(() => { lastHighlightLetter = null; renderBoard(); }, 2500);
     } else {
       const penalty = isVowel ? 0 : Math.max(50, Math.floor(Number(currentWheelValue || 100) / 2));
       players[currentPlayer].score = Math.max(0, players[currentPlayer].score - penalty);
@@ -948,6 +1151,8 @@
           ? `La vocal ${letter} no aparece en el panel.`
           : `La consonante ${letter} no está. Pierdes ${penalty} puntos.`
       );
+      // Mostrar modal de fallo
+      showIncorrectLetterModal(`La letra ${letter} no está en esta frase...`, isVowel ? 'Has perdido 50 puntos.' : `Pierdes ${penalty} puntos.`);
     }
 
     currentWheelValue = null;
@@ -992,9 +1197,11 @@
       setMessage("¡Correcto! Has descifrado el panel. Ganas 500 puntos extra.");
       $("nextPanelBtn").style.display = "block";
       lockRound();
+      showSolveModal(true, '¡Adivinaste la frase!', '¡Enhorabuena! Sumas 500 puntos extra por resolver el panel.');
     } else {
       players[currentPlayer].score = Math.max(0, players[currentPlayer].score - 200);
       setMessage("Respuesta incorrecta. Pierdes 200 puntos.");
+      showSolveModal(false, 'Respuesta incorrecta', 'Pierdes 200 puntos. ¡Sigue intentándolo!');
     }
 
     $("solveInput").value = "";
@@ -1205,7 +1412,23 @@
   function showScreenWithModalReset(id) {
     spinResultModalObj?.hide();
     turnNotificationModalObj?.hide();
+    correctLetterModalObj?.hide();
+    incorrectLetterModalObj?.hide();
+    solveResultModalObj?.hide();
     showScreen(id);
+  }
+
+  // Devuelve la clase CSS para un botón del teclado según si la letra está en la frase
+  function getLetterGuessClass(letter, isUsed) {
+    if (!isUsed) return '';
+    const panel = panels[currentPanel];
+    if (!panel) return 'used-key';
+    const phrase = panel.phrase;
+    if (phrase.includes(letter)) {
+      return 'correct-guess';
+    } else {
+      return 'wrong-guess';
+    }
   }
 
   // Despliega una alerta temporal en la parte superior

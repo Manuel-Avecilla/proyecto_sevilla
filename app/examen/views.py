@@ -232,8 +232,19 @@ def api_mp_create(request):
         return JsonResponse({'error': 'Debe iniciar sesión para crear una partida.'}, status=401)
     
     try:
+        data = {}
+        if request.body:
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                pass
+        
+        num_paneles = int(data.get('num_paneles', 5))
+        if num_paneles < 1 or num_paneles > 20:
+            num_paneles = 5
+            
         code = generate_lobby_code()
-        questions = list(Pregunta.objects.order_by('?')[:5])
+        questions = list(Pregunta.objects.order_by('?')[:num_paneles])
         if not questions:
             return JsonResponse({'error': 'No hay preguntas disponibles en la base de datos.'}, status=400)
             
@@ -386,7 +397,8 @@ def api_mp_status(request, codigo):
             'valor_ruleta_actual': val_ruleta,
             'fase_turno': lobby.fase_turno,
             'players': players_list,
-            'panels': panels_json
+            'panels': panels_json,
+            'ultimo_mensaje_suceso': lobby.ultimo_mensaje_suceso
         })
     except Exception as e:
         return JsonResponse({'error': f'Error al obtener estado: {str(e)}'}, status=500)
@@ -413,6 +425,7 @@ def api_mp_spin(request):
         wheel_values = [100, 150, 200, 250, 300, 400, 500, "PIERDE TURNO", "QUIEBRA"]
         value = random.choice(wheel_values)
         lobby.valor_ruleta_actual = str(value)
+        lobby.ultimo_mensaje_suceso = f"SPIN:{request.user.username}:{value}"
         
         if value == "PIERDE TURNO":
             pass_turn(lobby)
@@ -482,6 +495,7 @@ def api_mp_guess(request):
             if jp:
                 jp.puntos_partida += gained
                 jp.save()
+            lobby.ultimo_mensaje_suceso = f"HIT:{request.user.username}:{letter}:{occurrences}"
             lobby.valor_ruleta_actual = None
             lobby.fase_turno = 'GIRAR' # Sigue jugando, vuelve a girar o resolver
             lobby.save()
@@ -490,6 +504,7 @@ def api_mp_guess(request):
             if jp:
                 jp.puntos_partida = max(0, jp.puntos_partida - penalty)
                 jp.save()
+            lobby.ultimo_mensaje_suceso = f"MISS:{request.user.username}:{letter}"
             pass_turn(lobby)
             
         # Comprobar si el panel se ha completado
@@ -556,10 +571,12 @@ def api_mp_buy_vowel(request):
         occurrences = phrase_normalized.count(letter)
         
         if occurrences > 0:
+            lobby.ultimo_mensaje_suceso = f"HIT_VOWEL:{request.user.username}:{letter}:{occurrences}"
             # Mantiene el turno
             lobby.fase_turno = 'GIRAR'
             lobby.save()
         else:
+            lobby.ultimo_mensaje_suceso = f"MISS_VOWEL:{request.user.username}:{letter}"
             pass_turn(lobby)
             
         # Comprobar si el panel se ha completado
@@ -610,6 +627,7 @@ def api_mp_solve(request):
             # Revelar todas las letras
             letters_used = list(set(ch for ch in correct_phrase if ch.isalpha()))
             lobby.letras_usadas = ",".join(letters_used)
+            lobby.ultimo_mensaje_suceso = f"SOLVE:{request.user.username}"
             lobby.fase_turno = 'GIRAR'
             lobby.save()
             return JsonResponse({'ok': True, 'correct': True})
@@ -617,6 +635,7 @@ def api_mp_solve(request):
             if jp:
                 jp.puntos_partida = max(0, jp.puntos_partida - 200)
                 jp.save()
+            lobby.ultimo_mensaje_suceso = f"FAIL_SOLVE:{request.user.username}"
             pass_turn(lobby)
             return JsonResponse({'ok': True, 'correct': False})
     except Exception as e:

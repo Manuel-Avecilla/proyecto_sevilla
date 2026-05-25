@@ -39,6 +39,7 @@ class PartidaMultijugador(models.Model):
     jugador_actual_turno = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='turnos_multijugador_activos')
     valor_ruleta_actual = models.CharField(max_length=20, null=True, blank=True)
     fase_turno = models.CharField(max_length=30, default='GIRAR') # GIRAR, ADIVINAR
+    ultimo_mensaje_suceso = models.CharField(max_length=255, default='', blank=True)
     creada_en = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

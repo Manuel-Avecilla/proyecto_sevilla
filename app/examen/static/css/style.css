@@ -520,3 +520,28 @@ input:focus, select:focus, textarea:focus, .form-control:focus {
     width: 100% !important;
   }
 }
+
+/* Letter Hit/Miss Visual Highlighting */
+.tv-tile.correct-highlight {
+  background-color: #d1fae5 !important;
+  border-color: #10b981 !important;
+  color: #047857 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.keycap.correct-guess {
+  background-color: #d1fae5 !important;
+  border-color: #10b981 !important;
+  color: #047857 !important;
+  border-bottom-width: 1px !important;
+  height: clamp(30px, 4.2vw, 38px) !important;
+}
+
+.keycap.wrong-guess {
+  background-color: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  color: #b91c1c !important;
+  border-bottom-width: 1px !important;
+  height: clamp(30px, 4.2vw, 38px) !important;
+  text-decoration: line-through;
+}

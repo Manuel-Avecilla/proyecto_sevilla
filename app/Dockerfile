@@ -24,5 +24,5 @@ RUN python manage.py collectstatic --noinput
 # Exponer el puerto de Gunicorn
 EXPOSE 8000
 
-# Ejecutar la aplicación con Gunicorn
-CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:8000", "mysite.wsgi:application"]
+# Ejecutar la aplicación con Gunicorn (ejecutando migraciones y collectstatic al inicio)
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn --workers=4 --bind=0.0.0.0:8000 mysite.wsgi:application"]

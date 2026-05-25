@@ -1,21 +1,35 @@
 {% extends "base/base.html" %}
 {% load static %}
-
 {% load django_bootstrap5 %}
 {% load bootstrap_icons %}
 
-{% block title %}Examen - Registro Usuario{% endblock %}
+{% block title %}Ruleta Sevillana - Registro{% endblock %}
 
 {% block cabecera %}
-    <h1>Registro Usuario</h1>
-    <hr>
-    <br>
+    <div class="text-center my-4 py-2 animate__animated animate__fadeInDown">
+        <h1 class="display-5 fw-bold text-warning"><i class="bi bi-person-plus me-2"></i>Crear Cuenta</h1>
+        <p class="text-muted">Únete a la Ruleta Sevillana y registra tus puntuaciones en el ranking global</p>
+    </div>
 {% endblock %}
+
 {% block contenido %}
-    <form action="{% url 'registrar_usuario' %}" method="post">
-        {% csrf_token %}
-        {% bootstrap_form formulario %}
-        <button type="submit" class="btn btn-success">Registrarse</button>
-        <a href="{% url 'home' %}" class="btn btn-secondary">Cancelar</a>
-    </form>
+    <div class="row mb-5">
+        <div class="col-md-6 mx-auto">
+            <div class="card minimal-card p-4 shadow-sm animate__animated animate__fadeInUp">
+                <form action="{% url 'registrar_usuario' %}" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {% bootstrap_form formulario %}
+                    </div>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-emerald btn-lg">Registrarse</button>
+                        <a href="{% url 'home' %}" class="btn btn-secondary-outline btn-lg text-center">Cancelar</a>
+                    </div>
+                </form>
+                <div class="text-center mt-4 small text-muted">
+                    ¿Ya tienes una cuenta? <a href="{% url 'login' %}" class="text-warning fw-bold text-decoration-none">Inicia sesión aquí</a>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

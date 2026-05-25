@@ -6,8 +6,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-
-    <title>{% block title %}Examen{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ruleta Sevillana{% endblock %}</title>
 
     <script src="{% static 'js/script.js' %}" defer></script>
     
@@ -16,6 +16,16 @@
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-icons.min.css' %}">
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Animate.css for micro-animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <!-- Custom CSS Styling -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -24,7 +34,7 @@
 
     {% bootstrap_messages %}
 
-    <main class="p-4">
+    <main class="p-4 container">
         {% block cabecera %}
         {% endblock %}
 

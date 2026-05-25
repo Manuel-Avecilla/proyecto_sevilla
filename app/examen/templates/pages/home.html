@@ -4,47 +4,67 @@
 {% block title %}Ruleta Sevillana - Inicio{% endblock %}
 
 {% block cabecera %}
-    <div class="text-center my-4 py-3 bg-gradient text-dark rounded shadow-sm" style="background: linear-gradient(135deg, #f59e0b, #eab308);">
-        <h1 class="display-4 fw-bold">🎡 Ruleta Sevillana</h1>
-        <p class="lead mb-0">Demuestra tus conocimientos sobre la cultura, monumentos y tradiciones de Sevilla</p>
+    <div class="hero-minimal text-center my-4 py-4 animate__animated animate__fadeIn">
+        <h1 class="display-4 fw-bold text-warning mb-2" style="letter-spacing: -1px;">🎡 Ruleta Sevillana</h1>
+        <p class="lead text-secondary mb-0">Demuestra tus conocimientos sobre la cultura, monumentos y tradiciones de Sevilla</p>
     </div>
 {% endblock %}
 
 {% block contenido %}
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
         <!-- Panel de Juego e Instrucciones -->
         <div class="col-lg-7">
-            <div class="card h-100 border-0 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h3 class="card-title text-warning mb-3 fw-bold"><i class="bi bi-controller"></i> ¿Cómo jugar?</h3>
-                    <p class="text-muted">La Ruleta Sevillana es un divertido concurso interactivo. Gira la ruleta, adivina las consonantes o compra vocales para resolver el panel oculto sobre Sevilla.</p>
+            <div class="card minimal-card h-100 border-0 animate__animated animate__fadeInLeft">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <h3 class="card-title text-warning mb-3 fw-bold d-flex align-items-center gap-2">
+                            <i class="bi bi-controller"></i> ¿Cómo jugar?
+                        </h3>
+                        <p class="text-muted mb-4">La Ruleta Sevillana es un concurso interactivo. Gira la ruleta, adivina las consonantes o compra vocales para resolver el panel oculto sobre Sevilla.</p>
+                        
+                        <h5 class="fw-bold mt-4 mb-3 text-dark">Reglas del juego:</h5>
+                        <div class="rules-container">
+                            <div class="rule-item">
+                                <span class="rule-icon"><i class="bi bi-arrow-repeat"></i></span>
+                                <div>
+                                    <strong class="text-dark">Gira la ruleta</strong> para obtener una puntuación por cada letra que aciertes en el panel.
+                                </div>
+                            </div>
+                            <div class="rule-item">
+                                <span class="rule-icon"><i class="bi bi-coin"></i></span>
+                                <div>
+                                    Las vocales cuestan <strong class="text-warning">50 puntos</strong> y te ayudan a rellenar espacios si te quedas atascado.
+                                </div>
+                            </div>
+                            <div class="rule-item">
+                                <span class="rule-icon"><i class="bi bi-exclamation-triangle-fill text-danger"></i></span>
+                                <div>
+                                    Evita caer en la casilla <strong class="text-danger">Quiebra</strong> (pierdes todos tus puntos) o <strong class="text-warning">Pierde Turno</strong>.
+                                </div>
+                            </div>
+                            <div class="rule-item">
+                                <span class="rule-icon"><i class="bi bi-award-fill text-success"></i></span>
+                                <div>
+                                    Resolver el panel te otorga <strong class="text-success">500 puntos extra</strong>, o <strong class="text-success">300 puntos</strong> si destapas la última letra.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <h5 class="fw-bold mt-4 mb-3">Reglas del juego:</h5>
-                    <ul class="list-group list-group-flush mb-4">
-                        <li class="list-group-item bg-transparent border-0 ps-0">
-                            <i class="bi bi-check-circle-fill text-success me-2"></i> <strong>Girar la ruleta</strong> para obtener una puntuación por cada letra que aciertes.
-                        </li>
-                        <li class="list-group-item bg-transparent border-0 ps-0">
-                            <i class="bi bi-check-circle-fill text-success me-2"></i> Las vocales cuestan <strong>50 puntos</strong> y no multiplican.
-                        </li>
-                        <li class="list-group-item bg-transparent border-0 ps-0">
-                            <i class="bi bi-check-circle-fill text-success me-2"></i> Cuidado con la <strong>Quiebra</strong> (pierdes todos tus puntos) o <strong>Pierde Turno</strong>.
-                        </li>
-                        <li class="list-group-item bg-transparent border-0 ps-0">
-                            <i class="bi bi-check-circle-fill text-success me-2"></i> Resolver correctamente el panel te otorgará <strong>500 puntos extra</strong>. Completarlo adivinando la última letra te dará <strong>300 puntos extra</strong>.
-                        </li>
-                    </ul>
-                    
-                    <div class="d-grid mt-4">
+                    <div class="mt-4">
                         {% if request.user.is_authenticated %}
-                            <a href="{% url 'jugar_ruleta' %}" class="btn btn-warning btn-lg fw-bold py-3 text-dark rounded-3 shadow">
-                                <i class="bi bi-play-circle-fill me-2"></i> ¡Comenzar a Jugar ahora!
+                            <a href="{% url 'jugar_ruleta' %}" class="btn btn-gold btn-lg w-100 py-3 text-center d-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-play-circle-fill fs-5"></i> ¡Comenzar a Jugar ahora!
                             </a>
                         {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-warning btn-lg fw-bold py-3 text-dark rounded-3 shadow mb-2">
-                                <i class="bi bi-box-arrow-in-right me-2"></i> Inicia sesión para jugar
-                            </a>
-                            <p class="text-center text-muted small mt-2">¿No tienes cuenta? <a href="{% url 'registrar_usuario' %}" class="text-warning fw-bold text-decoration-none">Regístrate gratis aquí</a></p>
+                            <div class="d-flex flex-column gap-2">
+                                <a href="{% url 'login' %}" class="btn btn-gold btn-lg w-100 py-3 text-center d-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-box-arrow-in-right fs-5"></i> Inicia sesión para jugar
+                                </a>
+                                <p class="text-center text-muted small mt-2">
+                                    ¿No tienes cuenta? <a href="{% url 'registrar_usuario' %}" class="text-warning fw-bold text-decoration-none">Regístrate gratis aquí</a>
+                                </p>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -53,51 +73,37 @@
 
         <!-- Tabla de Clasificación Novedosa -->
         <div class="col-lg-5">
-            <div class="card h-100 border-0 shadow-sm rounded-4">
+            <div class="card minimal-card h-100 border-0 animate__animated animate__fadeInRight">
                 <div class="card-body p-4">
-                    <h3 class="card-title text-success mb-3 fw-bold"><i class="bi bi-trophy-fill"></i> Ranking Global</h3>
-                    <p class="text-muted small">Puntuaciones totales acumuladas por los jugadores registrados.</p>
+                    <h3 class="card-title text-success mb-3 fw-bold d-flex align-items-center gap-2">
+                        <i class="bi bi-trophy-fill"></i> Ranking Global
+                    </h3>
+                    <p class="text-muted small">Puntuaciones totales acumuladas por los mejores jugadores de Sevilla.</p>
                     
-                    <div class="table-responsive mt-3" style="max-height: 400px; overflow-y: auto;">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th scope="col" style="width: 60px;">Pos</th>
-                                    <th scope="col">Jugador</th>
-                                    <th scope="col" class="text-end">Puntos</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if ranking %}
-                                    {% for jugador in ranking %}
-                                        <tr {% if jugador.username == request.user.username %}class="table-warning fw-bold"{% endif %}>
-                                            <td>
-                                                {% if forloop.counter == 1 %}
-                                                    🥇
-                                                {% elif forloop.counter == 2 %}
-                                                    🥈
-                                                {% elif forloop.counter == 3 %}
-                                                    🥉
-                                                {% else %}
-                                                    {{ forloop.counter }}
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {{ jugador.username }}
-                                                {% if jugador.username == request.user.username %}
-                                                    <span class="badge bg-dark text-warning ms-1">Tú</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end text-success fw-bold">{{ jugador.total_score }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="3" class="text-center py-4 text-muted">Aún no hay puntuaciones guardadas. ¡Sé el primero!</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+                    <div class="ranking-list mt-3" style="max-height: 420px; overflow-y: auto; padding-right: 5px;">
+                        {% if ranking %}
+                            {% for jugador in ranking %}
+                                <div class="ranking-item {% if jugador.username == request.user.username %}self-user{% endif %}">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rank-badge {% if forloop.counter == 1 %}rank-first{% elif forloop.counter == 2 %}rank-second{% elif forloop.counter == 3 %}rank-third{% else %}rank-other{% endif %}">
+                                            {{ forloop.counter }}
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold text-dark">{{ jugador.username }}</span>
+                                            {% if jugador.username == request.user.username %}
+                                                <span class="badge bg-white text-warning border border-warning ms-1">Tú</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <span class="text-success fw-bold fs-5">{{ jugador.total_score }} <span class="small font-monospace opacity-70" style="font-size:0.75rem">pts</span></span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-journal-x fs-1 opacity-40 d-block mb-2"></i>
+                                Aún no hay puntuaciones registradas. ¡Sé el primero en jugar!
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

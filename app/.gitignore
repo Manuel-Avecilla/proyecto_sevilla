@@ -5,6 +5,7 @@ __pycache__/
 
 # Entornos virtuales
 myvenv
+myvenv2
 .venv/
 env/
 venv/

@@ -1,8 +1,9 @@
-# Examen - Desarrollo Web Entorno Servidor
+# Ruleta Sevillana en Django
 
-Examen de Formularios, Sesiones y Permisos en Django.
+Este proyecto es una migración completa de la aplicación **Ruleta Sevillana** de Node.js + MySQL a **Django + SQLite**, integrando el sistema de autenticación de Django, vistas nativas para clasificaciones y una API JSON para el funcionamiento del juego.
 
 ---
+
 ## Instalación y ejecución en local
 
 #### 1. Clonar el repositorio:
@@ -35,28 +36,24 @@ python manage.py migrate
 ```
 #### 8. Cargar datos iniciales:
 ```bash
-python manage.py loaddata examen/fixtures/datos.json
+python manage.py loaddata examen/fixtures/preguntas.json
 ```
 #### 9. Iniciar el servidor de desarrollo:
 ```bash
 python manage.py runserver
 ```
----
-## Documentación
-
-Para mantener el README principal más limpio, la documentación detallada se encuentra en los siguientes archivos:
-
-- [Modelos del Sistema](docs/modelos.md)
-- [URLS del Sistema](docs/url.md)
 
 ---
 
-## Tecnologías
-- **Framework:** Django (Python)
-- **Base de datos:** SQLite
-- **ORM:** Django Models
+## 🛠️ Tecnologías y Estructura
+- **Backend:** Django 5.x (Python 3)
+- **Base de datos:** SQLite (con `PRAGMA journal_mode=WAL;` y carga optimizada de datos)
+- **Autenticación:** Sesiones nativas de Django + endpoints JSON compatibles con el frontend.
+- **Frontend:** HTML5, CSS3, JavaScript (adaptado con Bootstrap y sistema de plantillas Django).
 
 ---
 
-## Autor
-**Manuel Avecilla 2ºDAW.**
+## 📊 Modelos del Sistema (Base de Datos)
+- **Usuario:** Cuenta de usuario que registra la puntuación total acumulada (`total_score`).
+- **Pregunta:** Almacena los paneles del concurso (`category`, `phrase` y `clue`).
+- **Partida (Match):** Registra cada partida finalizada por los usuarios (`usuario`, `score` y `played_at`).

@@ -21,4 +21,15 @@ urlpatterns = [
     path('api/questions', views.api_questions, name='api_questions'),
     path('api/save-score', views.api_save_score, name='api_save_score'),
     path('api/ranking', views.api_ranking, name='api_ranking'),
+
+    #---APIs for Multiplayer Mode---
+    path('api/multiplayer/create', views.api_mp_create, name='api_mp_create'),
+    path('api/multiplayer/join', views.api_mp_join, name='api_mp_join'),
+    path('api/multiplayer/start', views.api_mp_start, name='api_mp_start'),
+    path('api/multiplayer/status/<str:codigo>', views.api_mp_status, name='api_mp_status'),
+    path('api/multiplayer/spin', views.api_mp_spin, name='api_mp_spin'),
+    path('api/multiplayer/guess', views.api_mp_guess, name='api_mp_guess'),
+    path('api/multiplayer/buy-vowel', views.api_mp_buy_vowel, name='api_mp_buy_vowel'),
+    path('api/multiplayer/solve', views.api_mp_solve, name='api_mp_solve'),
+    path('api/multiplayer/next-panel', views.api_mp_next_panel, name='api_mp_next_panel'),
 ]

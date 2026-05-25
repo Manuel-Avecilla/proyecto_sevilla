@@ -313,6 +313,39 @@
       margin-bottom: 18px;
     }
 
+    .lobby-code-display {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--accent);
+      letter-spacing: 4px;
+      background: #0b1220;
+      padding: 10px 20px;
+      border-radius: 12px;
+      display: inline-block;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+    }
+
+    .turn-status-banner {
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .turn-status-banner.my-turn {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid var(--accent2);
+      color: #4ade80;
+    }
+
+    .turn-status-banner.other-turn {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--accent);
+      color: #fbbf24;
+    }
+
     @media (max-width: 850px) {
       .ruleta-game-container .grid, .ruleta-game-container .controls {
         grid-template-columns: 1fr;
@@ -336,7 +369,7 @@
   <p class="subtitle">Concurso de paneles interactivo en red local</p>
 
   <!-- Pantalla de Login / Registro -->
-  <section id="loginScreen" class="screen active">
+  <section id="loginScreen" class="screen">
     <div class="grid">
       <div class="card">
         <h2>Iniciar sesión</h2>
@@ -360,15 +393,65 @@
     <div id="authMessage" class="message">Regístrate o inicia sesión para jugar.</div>
   </section>
 
+  <!-- Pantalla de Selección de Modo (Single/Multi) -->
+  <section id="modeSelectionScreen" class="screen">
+    <div class="grid">
+      <div class="card d-flex flex-column justify-content-between">
+        <div>
+          <h2>Modo Individual</h2>
+          <p class="text-muted">Juega solo contra el reloj. Supera los paneles en secuencia y guarda tu puntuación al finalizar para subir en el ranking.</p>
+        </div>
+        <button class="good" id="btnSingleplayer">Jugar en Solitario</button>
+      </div>
+
+      <div class="card">
+        <h2>Modo Multijugador</h2>
+        <p class="text-muted">Crea una sala y comparte el código con tus amigos, o introduce el código de una sala existente para uniros en la misma WiFi.</p>
+        
+        <button class="secondary mb-3" id="btnCreateRoom">Crear una Sala</button>
+        
+        <hr class="border-secondary my-3">
+        
+        <label for="joinRoomCode">Código de Sala</label>
+        <input id="joinRoomCode" placeholder="Introduce el código de 6 letras" style="text-transform: uppercase;">
+        <button id="btnJoinRoom" class="good mt-2">Unirse a Sala</button>
+      </div>
+    </div>
+    <div id="modeMessage" class="message">Elige una opción para empezar a divertirte.</div>
+  </section>
+
+  <!-- Pantalla de Lobby (Sala de espera) -->
+  <section id="lobbyScreen" class="screen">
+    <div class="card text-center">
+      <h2>Sala de Espera</h2>
+      <p class="text-muted">Comparte este código con los demás jugadores de tu red:</p>
+      <div class="lobby-code-display" id="lobbyCodeDisplay">------</div>
+      
+      <h4 class="mt-4">Jugadores conectados:</h4>
+      <div id="lobbyPlayersList" class="my-3 d-flex justify-content-center flex-wrap gap-2">
+        <!-- Jugadores en espera -->
+      </div>
+
+      <div id="lobbyActions" class="mt-4">
+        <!-- Botón para el creador o mensaje para invitados -->
+      </div>
+      <button class="bad mt-3 mx-auto" id="btnLeaveLobby" style="max-width: 200px;">Salir de la Sala</button>
+    </div>
+  </section>
+
   <!-- Pantalla de Juego -->
   <section id="gameScreen" class="screen">
     <div class="userbar">
       <div>
         <strong>Usuario conectado:</strong> <span id="loggedUser" class="text-warning"></span>
         <span class="small text-muted"> | Puntuación total acumulada: <span id="savedScore" class="text-success fw-bold">0</span> pts</span>
+        <span id="mpRoomBadge" class="badge bg-secondary ms-2" style="display: none;">SALA: <span id="mpRoomCode"></span></span>
       </div>
       <button class="secondary" id="logoutBtn" style="width:auto; margin-top:0">Cerrar sesión</button>
     </div>
+
+    <!-- Banner de turnos en multijugador -->
+    <div id="turnStatusBanner" class="turn-status-banner" style="display: none;"></div>
 
     <div id="playersPanel" class="players"></div>
 
@@ -435,8 +518,24 @@
   let canGuess = false;
   let wheelRotation = 0;
 
+  // Variables para Multijugador
+  let gameMode = 'single'; // 'single' o 'multi'
+  let lobbyCode = null;
+  let pollingInterval = null;
+  let isMyTurn = false;
+
   const $ = id => document.getElementById(id);
 
+  // Pantalla de selección de modo
+  $("btnSingleplayer").addEventListener("click", () => {
+    gameMode = 'single';
+    startGame();
+  });
+  $("btnCreateRoom").addEventListener("click", createRoom);
+  $("btnJoinRoom").addEventListener("click", joinRoom);
+  $("btnLeaveLobby").addEventListener("click", leaveLobby);
+
+  // Auth y otros eventos
   $("registerBtn").addEventListener("click", register);
   $("loginBtn").addEventListener("click", login);
   $("logoutBtn").addEventListener("click", logout);
@@ -446,7 +545,10 @@
   $("solveBtn").addEventListener("click", solvePanel);
   $("finishBtn").addEventListener("click", finishGame);
   $("nextPanelBtn").addEventListener("click", nextPanel);
-  $("playAgainBtn").addEventListener("click", startGame);
+  $("playAgainBtn").addEventListener("click", () => {
+    stopPolling();
+    showScreen("modeSelectionScreen");
+  });
 
   async function api(url, options = {}) {
     const response = await fetch(url, {
@@ -490,7 +592,6 @@
 
       currentUser = data.user;
       localStorage.setItem("ruletaUser", JSON.stringify(currentUser));
-      // Refresh the page so Django session state is reloaded and header is updated
       window.location.reload();
     } catch (error) {
       $("authMessage").textContent = error.message;
@@ -502,6 +603,189 @@
     currentUser = null;
     window.location.href = "{% url 'logout' %}";
   }
+
+  // --- MULTIPLAYER ROOM ACTIONS ---
+
+  async function createRoom() {
+    try {
+      const data = await api("/api/multiplayer/create", { method: "POST" });
+      lobbyCode = data.codigo;
+      gameMode = 'multi';
+      setupLobbyView(true); // true = es creador
+      startPolling();
+    } catch (error) {
+      $("modeMessage").textContent = error.message;
+    }
+  }
+
+  async function joinRoom() {
+    const code = $("joinRoomCode").value.trim().toUpperCase();
+    if (!code || code.length !== 6) {
+      $("modeMessage").textContent = "Introduce un código válido de 6 caracteres.";
+      return;
+    }
+    try {
+      await api("/api/multiplayer/join", {
+        method: "POST",
+        body: JSON.stringify({ codigo: code })
+      });
+      lobbyCode = code;
+      gameMode = 'multi';
+      setupLobbyView(false); // false = es invitado
+      startPolling();
+    } catch (error) {
+      $("modeMessage").textContent = error.message;
+    }
+  }
+
+  function leaveLobby() {
+    stopPolling();
+    lobbyCode = null;
+    gameMode = 'single';
+    showScreen("modeSelectionScreen");
+    $("modeMessage").textContent = "Has salido de la sala.";
+  }
+
+  function setupLobbyView(isCreator) {
+    $("lobbyCodeDisplay").textContent = lobbyCode;
+    $("lobbyPlayersList").innerHTML = "";
+    
+    if (isCreator) {
+      $("lobbyActions").innerHTML = `<button id="btnStartGame" class="good px-5" style="width:auto">Iniciar Partida</button>`;
+      $("btnStartGame").addEventListener("click", startMultiplayerGame);
+    } else {
+      $("lobbyActions").innerHTML = `<div class="alert alert-info py-2 m-0 font-monospace">Esperando a que el creador inicie la partida...</div>`;
+    }
+    showScreen("lobbyScreen");
+  }
+
+  async function startMultiplayerGame() {
+    try {
+      await api("/api/multiplayer/start", {
+        method: "POST",
+        body: JSON.stringify({ codigo: lobbyCode })
+      });
+      // El polling se encargará de cambiar de pantalla a todos cuando se detecte el cambio de estado
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  // Polling Loop
+  function startPolling() {
+    stopPolling();
+    pollStatus();
+    pollingInterval = setInterval(pollStatus, 1500);
+  }
+
+  function stopPolling() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
+  }
+
+  async function pollStatus() {
+    if (!lobbyCode) return;
+    try {
+      const status = await api(`/api/multiplayer/status/${lobbyCode}`);
+      
+      if (status.estado === 'ESPERANDO') {
+        renderLobbyPlayers(status.players);
+      } else if (status.estado === 'JUGANDO') {
+        if ($("lobbyScreen").classList.contains("active") || $("modeSelectionScreen").classList.contains("active")) {
+          showScreen("gameScreen");
+          $("mpRoomBadge").style.display = "inline-block";
+          $("mpRoomCode").textContent = lobbyCode;
+        }
+        syncMultiplayerGame(status);
+      } else if (status.estado === 'TERMINADA') {
+        stopPolling();
+        showMultiplayerResults(status.players);
+      }
+    } catch (error) {
+      console.error("Polling error:", error);
+      stopPolling();
+      alert("Se perdió la conexión con la sala.");
+      showScreen("modeSelectionScreen");
+    }
+  }
+
+  function renderLobbyPlayers(playersList) {
+    $("lobbyPlayersList").innerHTML = playersList.map(p => `
+      <span class="badge bg-secondary p-3 fs-6 rounded-3"><i class="bi bi-person-fill me-1"></i> ${escapeHtml(p.username)}</span>
+    `).join("");
+  }
+
+  function syncMultiplayerGame(status) {
+    // Sincronizar variables locales
+    panels = status.panels.map(q => ({
+      category: q.category,
+      phrase: normalizeText(q.phrase),
+      clue: q.clue
+    }));
+    
+    currentPanel = status.panel_actual_index;
+    usedLetters = status.letras_usadas;
+    currentWheelValue = status.valor_ruleta_actual;
+    
+    // Lista de jugadores
+    players = status.players.map(p => ({
+      name: p.username,
+      score: p.score,
+      userId: p.id
+    }));
+    
+    // Encontrar el índice del jugador que tiene el turno
+    currentPlayer = status.players.findIndex(p => p.is_turn);
+    if (currentPlayer === -1) currentPlayer = 0;
+    
+    isMyTurn = (status.jugador_actual_turno_id === currentUser.id);
+
+    // Actualizar banner de turnos
+    const banner = $("turnStatusBanner");
+    banner.style.display = "block";
+    if (isMyTurn) {
+      banner.className = "turn-status-banner my-turn animate__animated animate__pulse animate__infinite";
+      banner.innerHTML = `<i class="bi bi-star-fill text-warning me-1"></i> ¡Es TU turno! Gira la ruleta o introduce una solución.`;
+    } else {
+      banner.className = "turn-status-banner other-turn";
+      banner.innerHTML = `<i class="bi bi-clock-history me-1"></i> Turno de <span class="fw-bold">${escapeHtml(status.jugador_actual_turno_username)}</span>. Esperando...`;
+    }
+
+    renderAll();
+  }
+
+  function showMultiplayerResults(playersList) {
+    showScreen("endScreen");
+    // Ordenar localmente por puntuación descendente para la tabla final
+    playersList.sort((a,b) => b.score - a.score);
+    
+    $("finalRanking").innerHTML = `
+      <p class="text-center fs-5 text-success fw-bold">Partida finalizada. ¡Las puntuaciones de todos los jugadores se han sincronizado en Django!</p>
+      <h4 class="mt-4 text-warning"><i class="bi bi-trophy"></i> Clasificación de la Partida:</h4>
+      <table class="ranking-table table table-dark table-hover table-striped mt-2">
+        <thead>
+          <tr>
+            <th>Posición</th>
+            <th>Usuario</th>
+            <th>Puntos en Partida</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${playersList.map((p,i) => `
+            <tr ${p.id === currentUser.id ? 'class="table-warning text-dark fw-bold"' : ''}>
+              <td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+              <td>${escapeHtml(p.username)} ${p.id === currentUser.id ? '<span class="badge bg-dark text-warning ms-1">Tú</span>' : ''}</td>
+              <td class="text-success fw-bold">${p.score} pts</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // --- GAME INITIALIZATION ---
 
   async function loadQuestions() {
     panels = await api("/api/questions");
@@ -517,7 +801,6 @@
 
   async function startGame() {
     try {
-      // Prioritize the Django session user injected dynamically
       {% if request.user.is_authenticated %}
       currentUser = {
         id: {{ request.user.id }},
@@ -537,22 +820,29 @@
         return;
       }
 
-      await loadQuestions();
-
-      players = [{ name: currentUser.username, score: 0, userId: currentUser.id }];
-      currentPlayer = 0;
-      currentPanel = 0;
-      usedLetters = [];
-      currentWheelValue = null;
-      canGuess = false;
-
       $("loggedUser").textContent = currentUser.username;
       $("savedScore").textContent = currentUser.total_score ?? 0;
 
-      showScreen("gameScreen");
-      unlockRound();
-      renderAll();
-      setMessage("Paneles cargados correctamente. ¡Gira la ruleta para empezar!");
+      if (gameMode === 'single') {
+        stopPolling();
+        $("mpRoomBadge").style.display = "none";
+        $("turnStatusBanner").style.display = "none";
+        isMyTurn = true; // En solitario siempre es tu turno
+        
+        await loadQuestions();
+
+        players = [{ name: currentUser.username, score: 0, userId: currentUser.id }];
+        currentPlayer = 0;
+        currentPanel = 0;
+        usedLetters = [];
+        currentWheelValue = null;
+        canGuess = false;
+
+        showScreen("gameScreen");
+        unlockRound();
+        renderAll();
+        setMessage("Paneles cargados correctamente. ¡Gira la ruleta para empezar!");
+      }
     } catch (error) {
       $("authMessage").textContent = error.message;
       showScreen("loginScreen");
@@ -574,9 +864,11 @@
     renderLetters();
     updateControls();
     const panel = panels[currentPanel];
-    $("roundTitle").textContent = `Panel ${currentPanel + 1} de ${panels.length}`;
-    $("category").textContent = `${panel.category}: ${panel.clue}`;
-    $("currentPlayerName").textContent = players[currentPlayer].name;
+    if (panel) {
+      $("roundTitle").textContent = `Panel ${currentPanel + 1} de ${panels.length}`;
+      $("category").textContent = `${panel.category}: ${panel.clue}`;
+    }
+    $("currentPlayerName").textContent = players[currentPlayer]?.name || "";
     $("currentWheelValue").textContent = typeof currentWheelValue === "number" ? currentWheelValue + " pts" : (currentWheelValue ?? "Sin girar");
   }
 
@@ -591,7 +883,9 @@
   }
 
   function renderBoard(){
-    const phrase = panels[currentPanel].phrase;
+    const panel = panels[currentPanel];
+    if (!panel) return;
+    const phrase = panel.phrase;
     $("board").innerHTML = phrase.split("").map(ch => {
       if(ch === " ") return `<div class="tile blank"></div>`;
       if(!/[A-ZÑ]/.test(ch)) return `<div class="tile">${ch}</div>`;
@@ -607,21 +901,46 @@
   }
 
   window.quickLetter = function(letter){
+    if (gameMode === 'multi' && !isMyTurn) return;
     $("letterInput").value = letter;
   }
 
-  function spinWheel(){
+  // --- ACTIONS (WITH SINGLE AND MULTI ROUTING) ---
+
+  async function spinWheel(){
+    if (gameMode === 'multi') {
+      if (!isMyTurn) return;
+      try {
+        const data = await api("/api/multiplayer/spin", {
+          method: "POST",
+          body: JSON.stringify({ codigo: lobbyCode })
+        });
+        
+        // Simular giro de la ruleta local para feedback visual
+        currentWheelValue = data.value;
+        wheelRotation += 720 + Math.floor(Math.random() * 720);
+        $("wheel").style.transform = `rotate(${wheelRotation}deg)`;
+        
+        // Esperamos una fracción de segundo por la transición CSS antes de recargar
+        setTimeout(pollStatus, 1000);
+      } catch (error) {
+        setMessage(error.message);
+      }
+      return;
+    }
+
+    // Modo Solitario
     const value = wheelValues[Math.floor(Math.random() * wheelValues.length)];
     currentWheelValue = value;
     wheelRotation += 720 + Math.floor(Math.random() * 720);
     $("wheel").style.transform = `rotate(${wheelRotation}deg)`;
 
     if(value === "PIERDE TURNO"){
-      setMessage(`${players[currentPlayer].name} pierde el turno.`);
+      setMessage(`${players[currentPlayer].name} pierde el turno. Gira otra vez.`);
       canGuess = false;
     } else if(value === "QUIEBRA"){
       players[currentPlayer].score = 0;
-      setMessage(`¡Quiebra! ${players[currentPlayer].name} pierde todos sus puntos de la partida.`);
+      setMessage(`¡Quiebra! Pierdes todos tus puntos de la partida. Gira de nuevo.`);
       canGuess = false;
     } else {
       canGuess = true;
@@ -631,8 +950,25 @@
     renderAll();
   }
 
-  function guessLetter(){
+  async function guessLetter(){
     const letter = normalizeText($("letterInput").value);
+    
+    if (gameMode === 'multi') {
+      if (!isMyTurn) return;
+      try {
+        await api("/api/multiplayer/guess", {
+          method: "POST",
+          body: JSON.stringify({ codigo: lobbyCode, letter: letter })
+        });
+        $("letterInput").value = "";
+        pollStatus();
+      } catch (error) {
+        setMessage(error.message);
+      }
+      return;
+    }
+
+    // Modo Solitario
     if(!canGuess || typeof currentWheelValue !== "number"){
       setMessage("Primero debes girar la ruleta.");
       return;
@@ -648,8 +984,25 @@
     processLetter(letter, currentWheelValue, false);
   }
 
-  function buyVowel(){
+  async function buyVowel(){
     const letter = normalizeText($("letterInput").value);
+    
+    if (gameMode === 'multi') {
+      if (!isMyTurn) return;
+      try {
+        await api("/api/multiplayer/buy-vowel", {
+          method: "POST",
+          body: JSON.stringify({ codigo: lobbyCode, letter: letter })
+        });
+        $("letterInput").value = "";
+        pollStatus();
+      } catch (error) {
+        setMessage(error.message);
+      }
+      return;
+    }
+
+    // Modo Solitario
     if(!letter || !vowels.includes(letter)){
       setMessage("Para comprar, introduce una vocal: A, E, I, O, U.");
       return;
@@ -697,10 +1050,31 @@
     renderAll();
   }
 
-  function solvePanel(){
+  async function solvePanel(){
     const answer = normalizeText($("solveInput").value);
-    const correct = normalizeText(panels[currentPanel].phrase);
+    
+    if (gameMode === 'multi') {
+      if (!isMyTurn) return;
+      try {
+        const data = await api("/api/multiplayer/solve", {
+          method: "POST",
+          body: JSON.stringify({ codigo: lobbyCode, phrase: answer })
+        });
+        $("solveInput").value = "";
+        if (data.correct) {
+          setMessage("¡Correcto! Has resuelto el panel (+500 pts).");
+        } else {
+          setMessage("Respuesta incorrecta. Pierdes 200 puntos y tu turno.");
+        }
+        pollStatus();
+      } catch (error) {
+        setMessage(error.message);
+      }
+      return;
+    }
 
+    // Modo Solitario
+    const correct = normalizeText(panels[currentPanel].phrase);
     if(!answer){
       setMessage("Escribe una respuesta para resolver.");
       return;
@@ -747,7 +1121,23 @@
     updateControls();
   }
 
-  function nextPanel(){
+  async function nextPanel(){
+    if (gameMode === 'multi') {
+      if (!isMyTurn) return;
+      try {
+        await api("/api/multiplayer/next-panel", {
+          method: "POST",
+          body: JSON.stringify({ codigo: lobbyCode })
+        });
+        $("nextPanelBtn").style.display = "none";
+        pollStatus();
+      } catch (error) {
+        setMessage(error.message);
+      }
+      return;
+    }
+
+    // Modo Solitario
     currentPanel++;
     if(currentPanel >= panels.length){
       finishGame();
@@ -810,7 +1200,41 @@
   }
 
   function updateControls(){
-    $("guessBtn").disabled = !canGuess;
+    // Determinar si los controles se pueden usar según el turno en multijugador
+    const allowInteraction = (gameMode === 'single') || (gameMode === 'multi' && isMyTurn);
+
+    if (allowInteraction) {
+      // Sincronizar estado de botones según fase de turno
+      if (gameMode === 'multi') {
+        const isSpinPhase = (currentWheelValue === null || currentWheelValue === undefined || currentWheelValue === "");
+        $("spinBtn").disabled = !isSpinPhase;
+        $("guessBtn").disabled = isSpinPhase;
+        $("buyVowelBtn").disabled = false;
+        $("solveBtn").disabled = false;
+        
+        // Controlar visualización del botón de siguiente panel
+        const currentPanelObj = panels[currentPanel];
+        if (currentPanelObj) {
+          const phraseLetters = [...new Set(currentPanelObj.phrase.split("").filter(ch => /[A-ZÑ]/.test(ch)))];
+          const completed = phraseLetters.every(ch => usedLetters.includes(ch));
+          $("nextPanelBtn").style.display = completed ? "block" : "none";
+        }
+      } else {
+        // Solitario
+        $("guessBtn").disabled = !canGuess;
+        $("spinBtn").disabled = false;
+        $("buyVowelBtn").disabled = false;
+        $("solveBtn").disabled = false;
+      }
+    } else {
+      // En multijugador y no es tu turno, todo deshabilitado
+      $("spinBtn").disabled = true;
+      $("guessBtn").disabled = true;
+      $("buyVowelBtn").disabled = true;
+      $("solveBtn").disabled = true;
+      $("nextPanelBtn").style.display = "none";
+    }
+
     $("currentPlayerName").textContent = players[currentPlayer]?.name || "";
     $("currentWheelValue").textContent = typeof currentWheelValue === "number" ? currentWheelValue + " pts" : (currentWheelValue ?? "Sin girar");
   }
@@ -834,7 +1258,28 @@
     }[char]));
   }
 
-  // Start initialization
-  startGame();
+  // --- INIT BOOTSTRAP ---
+  // Inyectamos el usuario autenticado en Django de forma prioritaria
+  {% if request.user.is_authenticated %}
+  currentUser = {
+    id: {{ request.user.id }},
+    username: "{{ request.user.username }}",
+    total_score: {{ request.user.total_score }}
+  };
+  localStorage.setItem("ruletaUser", JSON.stringify(currentUser));
+  showScreen("modeSelectionScreen");
+  $("loggedUser").textContent = currentUser.username;
+  $("savedScore").textContent = currentUser.total_score ?? 0;
+  {% else %}
+  const saved = localStorage.getItem("ruletaUser");
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    showScreen("modeSelectionScreen");
+    $("loggedUser").textContent = currentUser.username;
+    $("savedScore").textContent = currentUser.total_score ?? 0;
+  } else {
+    showScreen("loginScreen");
+  }
+  {% endif %}
 </script>
 {% endblock %}

@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # Copiar el código fuente del proyecto
 COPY . .
 
+# Crear el directorio para almacenar la base de datos sqlite persistente
+RUN mkdir -p /app/data
+
 # Recopilar los archivos estáticos en /app/staticfiles
 RUN python manage.py collectstatic --noinput
 

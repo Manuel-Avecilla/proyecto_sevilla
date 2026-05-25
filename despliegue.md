@@ -20,8 +20,8 @@ La arquitectura se basa en tres componentes que se comunican a través de una re
 
 Todos los archivos de configuración se encuentran en el directorio `app/`:
 
--   **`Dockerfile`**: Define cómo construir la imagen de Django. Instala las dependencias y corre `collectstatic` para recopilar las hojas de estilo y scripts de Bootstrap en un único directorio.
--   **`docker-compose.yml`**: Define y orquesta los tres contenedores, configurando la persistencia de la base de datos SQLite y volúmenes compartidos para certificados y archivos estáticos.
+-   **`Dockerfile`**: Define cómo construir la imagen de Django. Instala las dependencias y corre `collectstatic` para recopilar las hojas de estilo y scripts de Bootstrap en un único directorio. Crea la carpeta `/app/data` para almacenar la base de datos.
+-   **`docker-compose.yml`**: Define y orquesta los tres contenedores, configurando la persistencia mediante la carpeta `./data` y volúmenes compartidos para certificados y archivos estáticos. Pasa la variable `DJANGO_DB_DIR=/app/data` al contenedor.
 -   **`nginx.conf`**: Configura Nginx para realizar la terminación SSL, servir los estáticos en la ruta `/static/` desde el volumen y redirigir el resto de solicitudes a Gunicorn en `http://web:8000`.
 
 ---
@@ -48,10 +48,10 @@ Construye las imágenes e inicia los servicios:
 ```bash
 sudo docker compose up -d --build
 ```
-*Este comando descargará las imágenes base, construirá el contenedor de Django, generará el certificado SSL autofirmado de forma transparente y levantará el proxy Nginx.*
+*Este comando descargará las imágenes base, construirá el contenedor de Django, generará el certificado SSL autofirmado de forma transparente y levantará el proxy Nginx. Docker Compose creará de forma automática el directorio `./data` en el host.*
 
 ### 4. Inicializar y Poblar la Base de Datos
-Dado que SQLite se monta como un archivo vacío si no existe en el host, ejecuta las migraciones y carga las preguntas iniciales directamente en el contenedor en ejecución:
+Dado que la base de datos SQLite se almacena en el volumen compartido en `/app/data/db.sqlite3`, ejecuta las migraciones y carga las preguntas iniciales directamente en el contenedor en ejecución:
 ```bash
 # Aplicar migraciones de base de datos
 sudo docker compose exec web python manage.py migrate

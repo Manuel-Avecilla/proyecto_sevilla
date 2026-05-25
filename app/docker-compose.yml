@@ -4,10 +4,12 @@ services:
     container_name: ruleta_django_web
     restart: always
     volumes:
-      # Persistimos la base de datos SQLite mapeándola directamente al host
-      - ./db.sqlite3:/app/db.sqlite3
+      # Persistimos la carpeta que contiene la base de datos sqlite en el host
+      - ./data:/app/data
       # Compartimos los archivos estáticos recopilados para que Nginx los sirva
       - static-data:/app/staticfiles
+    environment:
+      - DJANGO_DB_DIR=/app/data
     networks:
       - ruleta_net
 

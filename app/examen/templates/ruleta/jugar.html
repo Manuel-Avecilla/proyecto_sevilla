@@ -132,11 +132,16 @@
     <!-- Connected Players Scoreboard -->
     <div id="playersPanel" class="players-container mb-4"></div>
 
+    <!-- Category & Clue Banner (Separate and prominent) -->
+    <div id="categoryCard" class="card minimal-card border-warning mb-3 p-3 text-center bg-warning bg-opacity-10 animate__animated animate__fadeIn">
+      <div class="small text-warning text-uppercase fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 2px;">Pista del Panel</div>
+      <h3 id="categoryDisplay" class="fw-bold text-dark m-0">Categoría: Pista</h3>
+    </div>
+
     <!-- Main Board Row -->
     <div class="card minimal-card p-4 mb-4 animate__animated animate__fadeIn" style="animation-delay: 0.1s;">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <span id="roundTitle" class="badge bg-warning text-dark px-3 py-2 fw-bold fs-6">Panel 1</span>
-        <span id="category" class="text-muted fw-bold fs-6 text-uppercase" style="letter-spacing:1px"></span>
       </div>
       <div id="board" class="tv-board"></div>
     </div>
@@ -220,6 +225,42 @@
     </div>
   </section>
 
+  <!-- Modal: Resultado de la Ruleta (Temporizado) -->
+  <div class="modal fade" id="spinResultModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content minimal-card border-warning">
+        <div class="modal-header border-0 text-center pb-0">
+          <h5 class="modal-title w-100 fw-bold text-dark" style="font-size:1.3rem;">🎡 Resultado de la Ruleta</h5>
+        </div>
+        <div class="modal-body text-center py-4">
+          <div class="display-3 fw-bold text-dark mb-3 animate__animated animate__rubberBand" id="spinResultValue">---</div>
+          <p class="fs-5 text-secondary m-0" id="spinResultMessage">Elige una consonante o compra una vocal.</p>
+        </div>
+        <div class="modal-footer border-0 pt-0 justify-content-center">
+          <button type="button" class="btn btn-gold px-4" data-bs-dismiss="modal">Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Notificación de Turno -->
+  <div class="modal fade" id="turnNotificationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content minimal-card border-warning">
+        <div class="modal-body text-center py-5">
+          <div class="mb-3" id="turnIconContainer">
+            <i class="bi bi-star-fill text-warning display-1 animate__animated animate__bounceIn"></i>
+          </div>
+          <h2 class="fw-bold text-dark mb-2 animate__animated animate__fadeInDown" id="turnTitle">¡Es tu turno!</h2>
+          <p class="fs-5 text-secondary m-0" id="turnMessage">Gira la ruleta para comenzar.</p>
+          <div class="mt-4" id="turnCloseBtnContainer" style="display:none;">
+            <button type="button" class="btn btn-gold px-4 animate__animated animate__zoomIn" data-bs-dismiss="modal">¡A Jugar!</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -243,7 +284,18 @@
   let pollingInterval = null;
   let isMyTurn = false;
 
+  // Modales de Bootstrap
+  let spinResultModalObj = null;
+  let turnNotificationModalObj = null;
+  let lastTurnUser = null;
+
   const $ = id => document.getElementById(id);
+
+  // Inicialización de los Modales una vez cargado el DOM
+  document.addEventListener("DOMContentLoaded", () => {
+    spinResultModalObj = new bootstrap.Modal(document.getElementById("spinResultModal"));
+    turnNotificationModalObj = new bootstrap.Modal(document.getElementById("turnNotificationModal"));
+  });
 
   // Event Listeners de Selección de Modo
   $("btnSingleplayer").addEventListener("click", () => {
@@ -446,7 +498,11 @@
     
     currentPanel = status.panel_actual_index;
     usedLetters = status.letras_usadas;
-    currentWheelValue = status.valor_ruleta_actual;
+    
+    // Solo sincronizar el valor de la ruleta si no se está ejecutando un giro local
+    if ($("spinBtn").disabled === false || status.valor_ruleta_actual === null) {
+      currentWheelValue = status.valor_ruleta_actual;
+    }
     
     players = status.players.map(p => ({
       name: p.username,
@@ -469,7 +525,38 @@
       banner.innerHTML = `<i class="bi bi-clock-history me-1 text-warning"></i> Turno de <span class="fw-bold">${escapeHtml(status.jugador_actual_turno_username)}</span>. Esperando jugada...`;
     }
 
+    // Gestionar la ventana modal del turno del jugador
+    handleTurnModal(status.jugador_actual_turno_username, isMyTurn);
+
     renderAll();
+  }
+
+  // Muestra modal indicando a quién le toca actuar
+  function handleTurnModal(activeUsername, isActiveUser) {
+    if (lastTurnUser === activeUsername) return;
+    lastTurnUser = activeUsername;
+
+    if (isActiveUser) {
+      // Es mi turno!
+      $("turnIconContainer").innerHTML = `<i class="bi bi-star-fill text-warning display-1 animate__animated animate__bounceIn"></i>`;
+      $("turnTitle").textContent = "¡Es tu turno!";
+      $("turnMessage").textContent = "Gira la ruleta o intenta resolver el panel.";
+      $("turnCloseBtnContainer").style.display = "block";
+      
+      turnNotificationModalObj?.show();
+      // Cerrar automáticamente en 2 segundos
+      setTimeout(() => {
+        turnNotificationModalObj?.hide();
+      }, 2000);
+    } else {
+      // Turno de otro concursante
+      $("turnIconContainer").innerHTML = `<i class="bi bi-clock-history text-primary display-1 animate__animated animate__pulse animate__infinite"></i>`;
+      $("turnTitle").textContent = `Turno de ${activeUsername}`;
+      $("turnMessage").textContent = "Esperando a que realice su jugada...";
+      $("turnCloseBtnContainer").style.display = "none";
+      
+      turnNotificationModalObj?.show();
+    }
   }
 
   function showMultiplayerResults(playersList) {
@@ -538,6 +625,8 @@
         $("mpRoomBadge").style.display = "none";
         $("turnStatusBanner").style.display = "none";
         isMyTurn = true; 
+        lastTurnUser = currentUser.username; // Previene modales de turno en solitario
+        turnNotificationModalObj?.hide();
         
         await loadQuestions();
 
@@ -576,7 +665,7 @@
     const panel = panels[currentPanel];
     if (panel) {
       $("roundTitle").textContent = `Panel ${currentPanel + 1} de ${panels.length}`;
-      $("category").textContent = `${panel.category}: ${panel.clue}`;
+      $("categoryDisplay").innerHTML = `<span class="text-warning fw-bold text-uppercase">${panel.category}</span>: <span class="text-dark">${panel.clue}</span>`;
     }
   }
 
@@ -590,6 +679,7 @@
     `).join("");
   }
 
+  // Dibuja el panel estilo concurso de TV
   function renderBoard(){
     const panel = panels[currentPanel];
     if (!panel) return;
@@ -643,7 +733,7 @@
     const isVowel = vowels.includes(letter);
     
     if (isVowel) {
-      // Vowel purchase phase
+      // Comprar Vocal
       if (gameMode === 'multi') {
         try {
           await api("/api/multiplayer/buy-vowel", {
@@ -655,7 +745,7 @@
           setMessage(error.message);
         }
       } else {
-        // Singleplayer mode vowel purchase
+        // Solitario
         if(players[currentPlayer].score < 50){
           setMessage("No tienes suficientes puntos en esta partida para comprar una vocal.");
           return;
@@ -664,7 +754,7 @@
         processLetter(letter, 0, true);
       }
     } else {
-      // Consonant guess phase
+      // Probar consonante
       if (gameMode === 'multi') {
         try {
           await api("/api/multiplayer/guess", {
@@ -676,7 +766,7 @@
           setMessage(error.message);
         }
       } else {
-        // Singleplayer mode consonant guess
+        // Solitario
         if(!canGuess || typeof currentWheelValue !== "number"){
           setMessage("Primero debes girar la ruleta para obtener puntuación.");
           return;
@@ -701,7 +791,11 @@
         wheelRotation += 720 + Math.floor(Math.random() * 720);
         $("wheel").style.transform = `rotate(${wheelRotation}deg)`;
         
-        setTimeout(pollStatus, 1500);
+        // Espera a que termine el giro para mostrar el resultado y sincronizar el estado
+        setTimeout(() => {
+          showSpinResultModal(data.value);
+          pollStatus();
+        }, 1800);
       } catch (error) {
         setMessage(error.message);
       }
@@ -714,19 +808,52 @@
     wheelRotation += 720 + Math.floor(Math.random() * 720);
     $("wheel").style.transform = `rotate(${wheelRotation}deg)`;
 
-    if(value === "PIERDE TURNO"){
-      setMessage(`${players[currentPlayer].name} pierde el turno. Gira otra vez.`);
-      canGuess = false;
-    } else if(value === "QUIEBRA"){
-      players[currentPlayer].score = 0;
-      setMessage("¡Quiebra! Pierdes tus puntos del panel actual. Gira de nuevo.");
-      canGuess = false;
-    } else {
-      canGuess = true;
-      setMessage(`La ruleta marca ${value} puntos. ¡Elige una consonante!`);
-    }
+    // Espera a que termine de rotar para aplicar los efectos y mostrar el modal
+    setTimeout(() => {
+      showSpinResultModal(value);
 
-    renderAll();
+      if(value === "PIERDE TURNO"){
+        setMessage(`${players[currentPlayer].name} pierde el turno. Gira otra vez.`);
+        canGuess = false;
+      } else if(value === "QUIEBRA"){
+        players[currentPlayer].score = 0;
+        setMessage("¡Quiebra! Pierdes tus puntos del panel actual. Gira de nuevo.");
+        canGuess = false;
+      } else {
+        canGuess = true;
+        setMessage(`La ruleta marca ${value} puntos. ¡Elige una consonante!`);
+      }
+      renderAll();
+    }, 1800);
+  }
+
+  // Despliega el modal emergente con los resultados del giro de ruleta
+  function showSpinResultModal(value) {
+    const isNumber = typeof value === "number";
+    $("spinResultValue").textContent = isNumber ? `${value} pts` : value;
+
+    const modalContent = $("spinResultModal").querySelector(".modal-content");
+    const spinVal = $("spinResultValue");
+    const spinMsg = $("spinResultMessage");
+
+    if (value === "QUIEBRA") {
+      modalContent.className = "modal-content minimal-card border-danger";
+      spinVal.className = "display-3 fw-bold text-danger mb-3 animate__animated animate__shakeX";
+      spinMsg.textContent = "¡Vaya! Mala suerte. Pierdes todos tus puntos del panel actual.";
+      spinResultModalObj?.show();
+      setTimeout(() => spinResultModalObj?.hide(), 2500);
+    } else if (value === "PIERDE TURNO") {
+      modalContent.className = "modal-content minimal-card border-warning";
+      spinVal.className = "display-4 fw-bold text-warning mb-3 animate__animated animate__wobble";
+      spinMsg.textContent = "¡Oh no! Pierdes el turno. Pasa al siguiente concursante.";
+      spinResultModalObj?.show();
+      setTimeout(() => spinResultModalObj?.hide(), 2500);
+    } else {
+      modalContent.className = "modal-content minimal-card border-success";
+      spinVal.className = "display-3 fw-bold text-success mb-3 animate__animated animate__bounceIn";
+      spinMsg.textContent = "¡Buena tirada! Elige una consonante en el teclado para multiplicar.";
+      spinResultModalObj?.show();
+    }
   }
 
   function processLetter(letter, value, isVowel){
@@ -985,6 +1112,13 @@
   function showScreen(id){
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     $(id).classList.add("active");
+  }
+
+  // Oculta modales al cambiar de pantalla
+  function showScreenWithModalReset(id) {
+    spinResultModalObj?.hide();
+    turnNotificationModalObj?.hide();
+    showScreen(id);
   }
 
   function setMessage(text){

@@ -10,6 +10,7 @@ services:
       - static-data:/app/staticfiles
     environment:
       - DJANGO_DB_DIR=/app/data
+      - DJANGO_CSRF_TRUSTED_ORIGINS=https://13.216.94.237
     networks:
       - ruleta_net
 

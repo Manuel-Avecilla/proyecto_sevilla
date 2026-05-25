@@ -21,7 +21,7 @@ La arquitectura se basa en tres componentes que se comunican a través de una re
 Todos los archivos de configuración se encuentran en el directorio `app/`:
 
 -   **`Dockerfile`**: Define cómo construir la imagen de Django. Instala las dependencias y corre `collectstatic` para recopilar las hojas de estilo y scripts de Bootstrap en un único directorio. Crea la carpeta `/app/data` para almacenar la base de datos.
--   **`docker-compose.yml`**: Define y orquesta los tres contenedores, configurando la persistencia mediante la carpeta `./data` y volúmenes compartidos para certificados y archivos estáticos. Pasa la variable `DJANGO_DB_DIR=/app/data` al contenedor.
+-   **`docker-compose.yml`**: Define y orquesta los tres contenedores, configurando la persistencia mediante la carpeta `./data` y volúmenes compartidos para certificados y archivos estáticos. Pasa las variables `DJANGO_DB_DIR=/app/data` y `DJANGO_CSRF_TRUSTED_ORIGINS` (que autoriza el dominio/IP del proxy en la validación CSRF de Django sobre HTTPS) al contenedor.
 -   **`nginx.conf`**: Configura Nginx para realizar la terminación SSL, servir los estáticos en la ruta `/static/` desde el volumen y redirigir el resto de solicitudes a Gunicorn en `http://web:8000`.
 
 ---

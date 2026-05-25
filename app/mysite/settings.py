@@ -139,3 +139,19 @@ LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Configuración de orígenes de confianza para la protección CSRF en producción (HTTPS)
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost',
+    'http://localhost',
+    'https://127.0.0.1',
+    'http://127.0.0.1',
+    'https://13.216.94.237',  # IP pública actual de tu servidor AWS
+]
+
+csrf_env = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS')
+if csrf_env:
+    for origin in csrf_env.split(','):
+        origin = origin.strip()
+        if origin:
+            CSRF_TRUSTED_ORIGINS.append(origin)

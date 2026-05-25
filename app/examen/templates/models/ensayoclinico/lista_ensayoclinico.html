@@ -1,0 +1,33 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Examen - Ensayo Clinico{% endblock %}
+
+
+{% block cabecera %}
+    <h1>Lista Ensayos Clinicos</h1>
+    <hr>
+    <br>
+{% endblock %}
+
+{% block contenido %}
+    
+    {% if perms.examen.delete_ensayoclinico %}
+        {% include "base/modal/_modal_eliminar.html" %}
+    {% endif %}
+
+    {% if Mensaje_Busqueda %}
+        <pre>{{Mensaje_Busqueda}}</pre>
+        <hr>
+        <br>
+    {% endif %}
+
+    <div class="d-flex flex-wrap align-content-center justify-content-center gap-4">
+        {% for EnsayoClinico_Mostrar in EnsayosClinicos_Mostrar %}
+            {% include "models/ensayoclinico/_item_ensayoclinico.html" %}
+        {% empty %}
+            <h2>No se encontraron Ensayos Clinicos</h2>
+        {% endfor %}
+    </div>
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Examen - Home{% endblock %}
+
+
+{% block cabecera %}
+    <h1>Examen Formularios y Sesiones Django.</h1>
+    <h3>Manuel Avecilla - 2ºDAW</h3>
+    <hr>
+    <br>
+{% endblock %}
+
+{% block contenido %}
+    
+    <h5>Menu Enlaces</h5>
+    <br>
+
+    <p>Ensayo Clinico - CRUD</p>
+    <ul>
+        <li><a href="{% url 'ensayoclinico_create' %}">Ensayo Clinico - CREATE</a></li>
+        <li><a href="{% url 'ensayosclinicos_listar' %}">Ensayo Clinico - READ - Lista</a></li>
+        <li><a href="{% url 'ensayoclinico_buscar_avanzado' %}">Ensayo Clinico - READ - Filtro avanzado</a></li>
+        <li><a href="{% url 'ensayosclinicos_listar' %}">Ensayo Clinico - UPDATE</a></li>
+        <li><a href="{% url 'ensayosclinicos_listar' %}">Ensayo Clinico - DELETE</a></li>
+    </ul>
+
+    <br>
+    <hr>
+
+    <p>URLs</p>
+    <ul>
+        <li><a href="{% url 'usuarios_listar' %}">Lista Usuarios</a></li>
+        <li><a href="{% url 'ensayosclinicos_listar' %}">Lista Ensayos Clinicos</a></li>
+    </ul>
+
+
+{% endblock %}
+

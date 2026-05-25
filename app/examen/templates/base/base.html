@@ -1,0 +1,38 @@
+{% load static %}
+{% load django_bootstrap5 %}
+{% load bootstrap_icons %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <title>{% block title %}Examen{% endblock %}</title>
+
+    <script src="{% static 'js/script.js' %}" defer></script>
+    
+    <!-- Bootstrap local -->
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-icons.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+    {% include "base/_header.html" %}
+
+    {% bootstrap_messages %}
+
+    <main class="p-4">
+        {% block cabecera %}
+        {% endblock %}
+
+        {% block contenido %}
+        {% endblock %}
+    </main>
+
+    {% include "base/_footer.html" %}
+
+</body>
+</html>

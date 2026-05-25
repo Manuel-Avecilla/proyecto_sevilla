@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% load django_bootstrap5 %}
+{% load bootstrap_icons %}
+
+{% block title %}Examen - Registro Usuario{% endblock %}
+
+{% block cabecera %}
+    <h1>Registro Usuario</h1>
+    <hr>
+    <br>
+{% endblock %}
+{% block contenido %}
+    <form action="{% url 'registrar_usuario' %}" method="post">
+        {% csrf_token %}
+        {% bootstrap_form formulario %}
+        <button type="submit" class="btn btn-success">Registrarse</button>
+        <a href="{% url 'home' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+{% endblock %}

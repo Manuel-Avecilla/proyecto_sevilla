@@ -1,0 +1,100 @@
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                ¿Seguro que deseas eliminar?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                
+                <form id="formEliminar" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/*
+    Este script permite reutilizar un unico modal para eliminar
+    para diferentes modelos dentro de una lista.
+
+    Funcionamiento:
+
+    1. Bootstrap dispara el evento "show.bs.modal" justo antes de que el modal se abra.
+        Ese evento incluye información del elemento que lo activo (event.relatedTarget),
+        que en nuestro caso es el boton "Eliminar" de un item.
+
+    2. Cada boton "Eliminar" tiene un atributo data-url con la URL especifica
+        para eliminar al modelo correspondiente. 
+        
+        Ejemplo:
+            data-url=" url 'usuario_eliminar' id_usuario=Usuario_Mostrar.id "
+            que equivale a:
+            data-url="/usuario/eliminar/5"
+
+    3. Cuando el modal se va a abrir, el script captura la URL desde el boton
+        que lo activo.
+
+    4. Luego, el script actualiza dinamicamente el atributo "action" del formulario
+        dentro del modal, para que apunte a la URL correcta.
+
+    De esta forma:
+    - Solo necesitas un unico modal con un unico formulario en el HTML.
+    - No tienes que generar un modal por cada usuario (mejor rendimiento).
+    - El formulario siempre envia al endpoint adecuado segun el modelo seleccionado.
+*/
+
+document.getElementById('modalEliminar').addEventListener('show.bs.modal', function (event) {
+    // Elemento que disparo la apertura del modal (el boton Eliminar)
+    const button = event.relatedTarget;
+
+    // Recuperamos la URL del atributo data-url del boton
+    const url = button.getAttribute('data-url');
+
+    // Asignamos esa URL al formulario del modal
+    document.getElementById('formEliminar').setAttribute('action', url);
+});
+
+/*
+    Flujo:
+
+    [ modal - cerrado ] --> formulario sin atributo action definido
+    <script>
+        El script permanece a la espera del evento 'show.bs.modal'
+    <script>
+
+    Lista de usuarios:
+        Usuario 1
+        Usuario 2
+        Usuario 5
+        ...
+
+    El usuario pulsa el boton del Usuario 5:
+        [ Eliminar ] --> este boton abre el modal y tiene el atributo:
+                                data-url="/usuario/eliminar/5"
+            |
+            v
+    Bootstrap dispara el evento: 'show.bs.modal'
+            |
+            v
+    <script>
+        boton = elemento que activo el evento (event.relatedTarget)
+        url = valor del atributo 'data-url' del boton
+        Se asigna al formulario del modal: form.setAttribute('action', url)
+    <script>
+            |
+            v
+    [ modal - abierto ] --> formulario con action="/usuario/eliminar/5"
+*/
+</script>

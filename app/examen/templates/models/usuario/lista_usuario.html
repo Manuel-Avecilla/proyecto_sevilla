@@ -1,0 +1,33 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Examen - Usuarios{% endblock %}
+
+
+{% block cabecera %}
+    <h1>Lista Usuarios</h1>
+    <hr>
+    <br>
+{% endblock %}
+
+{% block contenido %}
+    
+    {% if perms.examen.delete_usuario %}
+        {% include "base/modal/_modal_eliminar.html" %}
+    {% endif %}
+
+    {% if Mensaje_Busqueda %}
+        <pre>{{Mensaje_Busqueda}}</pre>
+        <hr>
+        <br>
+    {% endif %}
+
+    <div class="d-flex flex-wrap align-content-center justify-content-center gap-4">
+        {% for Usuario_Mostrar in Usuarios_Mostrar %}
+            {% include "models/usuario/_item_usuario.html" %}
+        {% empty %}
+            <h2>No se encontraron usuarios</h2>
+        {% endfor %}
+    </div>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Examen - Usuarios{% endblock %}
+
+
+{% block cabecera %}
+    <h1>Lista Usuarios</h1>
+    <hr>
+    <br>
+{% endblock %}
+
+{% block contenido %}
+    
+    {% if perms.examen.delete_usuario %}
+        {% include "base/modal/_modal_eliminar.html" %}
+    {% endif %}
+
+    {% include "models/usuario/_item_usuario.html" %}
+
+{% endblock %}

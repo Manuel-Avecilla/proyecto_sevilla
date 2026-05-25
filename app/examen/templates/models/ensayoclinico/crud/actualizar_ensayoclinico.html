@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load django_bootstrap5 %}
+{% load bootstrap_icons %}
+
+{% block title %}Examen - UPDATE{% endblock %}
+
+
+{% block cabecera %}
+    <h1>Actualizar Ensayo Clinico</h1>
+    <hr>
+    <br>
+{% endblock %}
+{% block contenido %}
+    <form action="{% url 'ensayoclinico_editar' id_ensayoclinico=ensayoclinico.id %}" method="post">
+        {% csrf_token %}
+        {% bootstrap_form formulario %}
+        <button type="submit" class="btn btn-success">Actualizar</button>
+        <a href="{% url 'ensayosclinicos_listar' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+{% endblock %}

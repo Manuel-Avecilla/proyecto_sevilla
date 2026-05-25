@@ -1,0 +1,14 @@
+<div class="card mb-3" style="max-width: 22rem;">
+    <div class="card-body">
+        <h5 class="card-title">{{ Usuario_Mostrar.username }}</h5>
+
+        <h6 class="card-subtitle mb-2 text-muted">
+            Rol: {{ Usuario_Mostrar.get_rol_display }}
+        </h6>
+
+        <p class="card-text">
+            ID: {{ Usuario_Mostrar.id }}<br>
+            Email: {{ Usuario_Mostrar.email }}
+        </p>
+    </div>
+</div>

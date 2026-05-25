@@ -1,0 +1,43 @@
+<div class="card mb-3" style="max-width: 22rem;">
+    <div class="card-body">
+        <h5 class="card-title">Ensayo Clinico: {{ EnsayoClinico_Mostrar.nombre }}</h5>
+
+        <p class="card-text">
+            Descripcion: {{ EnsayoClinico_Mostrar.descripcion|default:"Sin Descripcion" }}<br><hr>
+            Farmaco: {{ EnsayoClinico_Mostrar.farmaco.nombre }}<br><hr>
+            Pacientes:
+            <ul>
+                {% for paciente in EnsayoClinico_Mostrar.pacientes.all %}
+                    <li>Nombre {{ paciente.usuario.username }} - Edad {{paciente.edad}}</li>
+                {% empty %}
+                    <li>Sin Pacientes Asignados</li>
+                {% endfor %}
+            </ul><br><hr>
+            Nivel de Seguimiento: {{ EnsayoClinico_Mostrar.nivel_seguimiento }}<br><hr>
+            Fecha de Inicio: {{ EnsayoClinico_Mostrar.fecha_inicio }}<br><hr>
+            Fecha de Fin: {{ EnsayoClinico_Mostrar.fecha_fin }}<br><hr>
+            Activo: {{ EnsayoClinico_Mostrar.activo|yesno:"Si,No" }}<br><hr>
+            Creado por: [ Nombre: {{ EnsayoClinico_Mostrar.creado_por.usuario.username }} - Puesto: {{ EnsayoClinico_Mostrar.creado_por.puesto }} ]<br><hr>
+        
+            <div class="ud-buttons">
+                {% if perms.examen.change_ensayoclinico %}
+                    <a class="m-4" href="{% url 'ensayoclinico_editar' id_ensayoclinico=EnsayoClinico_Mostrar.id %}">
+                        Editar
+                    </a>
+                {% endif %}
+                {% if perms.examen.delete_ensayoclinico %}
+                    <button type="button" class="btn btn-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalEliminar"
+                            data-url="{% url 'ensayoclinico_eliminar' id_ensayoclinico=EnsayoClinico_Mostrar.id %}">
+                        Eliminar
+                    </button>
+                {% endif %}
+            </div>
+
+        </p>
+
+
+        
+    </div>
+</div>

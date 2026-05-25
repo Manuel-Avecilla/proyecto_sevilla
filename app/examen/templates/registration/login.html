@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% load django_bootstrap5 %}
+{% load bootstrap_icons %}
+
+{% block title %}Examen - Login{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block cabecera %}
+    <h1>Iniciar Sesion</h1>
+    <hr>
+    <br>
+{% endblock %}
+{% block contenido %}
+    <form action="{% url 'login' %}" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <button type="submit" class="btn btn-success">Iniciar Sesion</button>
+        <a href="{% url 'home' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+{% endblock %}

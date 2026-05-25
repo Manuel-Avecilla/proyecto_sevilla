@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-725bb6!g@j#!64yshzc52q_0*fu2#p$&_ws)1g9$3k9k)cx0ba
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 INTERNAL_IPS = ["127.0.0.1"]
 
@@ -134,3 +134,5 @@ AUTH_USER_MODEL = 'examen.Usuario'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'

@@ -1,0 +1,54 @@
+services:
+  web:
+    build: .
+    container_name: ruleta_django_web
+    restart: always
+    volumes:
+      # Persistimos la base de datos SQLite mapeándola directamente al host
+      - ./db.sqlite3:/app/db.sqlite3
+      # Compartimos los archivos estáticos recopilados para que Nginx los sirva
+      - static-data:/app/staticfiles
+    networks:
+      - ruleta_net
+
+  cert-generator:
+    image: alpine/openssl
+    container_name: ruleta_cert_generator
+    entrypoint: /bin/sh
+    volumes:
+      - certs:/certs
+    command: >
+      -c "
+      if [ ! -f /certs/server.crt ]; then
+        echo 'Generando certificado autofirmado...';
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /certs/server.key -out /certs/server.crt -subj '/C=ES/ST=Sevilla/L=Sevilla/O=RuletaSevillana/CN=localhost';
+      else
+        echo 'Certificado ya existente, omitiendo.';
+      fi"
+
+  proxy:
+    image: nginx:alpine
+    container_name: ruleta_proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - certs:/certs:ro
+      - static-data:/usr/share/nginx/html/static:ro
+    depends_on:
+      web:
+        condition: service_started
+      cert-generator:
+        condition: service_completed_successfully
+    networks:
+      - ruleta_net
+
+volumes:
+  certs:
+  static-data:
+
+networks:
+  ruleta_net:
+    driver: bridge

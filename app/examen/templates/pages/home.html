@@ -1,39 +1,106 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Examen - Home{% endblock %}
-
+{% block title %}Ruleta Sevillana - Inicio{% endblock %}
 
 {% block cabecera %}
-    <h1>Examen Formularios y Sesiones Django.</h1>
-    <h3>Manuel Avecilla - 2ºDAW</h3>
-    <hr>
-    <br>
+    <div class="text-center my-4 py-3 bg-gradient text-dark rounded shadow-sm" style="background: linear-gradient(135deg, #f59e0b, #eab308);">
+        <h1 class="display-4 fw-bold">🎡 Ruleta Sevillana</h1>
+        <p class="lead mb-0">Demuestra tus conocimientos sobre la cultura, monumentos y tradiciones de Sevilla</p>
+    </div>
 {% endblock %}
 
 {% block contenido %}
-    
-    <h5>Menu Enlaces</h5>
-    <br>
+    <div class="row g-4">
+        <!-- Panel de Juego e Instrucciones -->
+        <div class="col-lg-7">
+            <div class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-warning mb-3 fw-bold"><i class="bi bi-controller"></i> ¿Cómo jugar?</h3>
+                    <p class="text-muted">La Ruleta Sevillana es un divertido concurso interactivo. Gira la ruleta, adivina las consonantes o compra vocales para resolver el panel oculto sobre Sevilla.</p>
+                    
+                    <h5 class="fw-bold mt-4 mb-3">Reglas del juego:</h5>
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item bg-transparent border-0 ps-0">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> <strong>Girar la ruleta</strong> para obtener una puntuación por cada letra que aciertes.
+                        </li>
+                        <li class="list-group-item bg-transparent border-0 ps-0">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> Las vocales cuestan <strong>50 puntos</strong> y no multiplican.
+                        </li>
+                        <li class="list-group-item bg-transparent border-0 ps-0">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> Cuidado con la <strong>Quiebra</strong> (pierdes todos tus puntos) o <strong>Pierde Turno</strong>.
+                        </li>
+                        <li class="list-group-item bg-transparent border-0 ps-0">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> Resolver correctamente el panel te otorgará <strong>500 puntos extra</strong>. Completarlo adivinando la última letra te dará <strong>300 puntos extra</strong>.
+                        </li>
+                    </ul>
+                    
+                    <div class="d-grid mt-4">
+                        {% if request.user.is_authenticated %}
+                            <a href="{% url 'jugar_ruleta' %}" class="btn btn-warning btn-lg fw-bold py-3 text-dark rounded-3 shadow">
+                                <i class="bi bi-play-circle-fill me-2"></i> ¡Comenzar a Jugar ahora!
+                            </a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-warning btn-lg fw-bold py-3 text-dark rounded-3 shadow mb-2">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Inicia sesión para jugar
+                            </a>
+                            <p class="text-center text-muted small mt-2">¿No tienes cuenta? <a href="{% url 'registrar_usuario' %}" class="text-warning fw-bold text-decoration-none">Regístrate gratis aquí</a></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <p>Ensayo Clinico - CRUD</p>
-    <ul>
-        <li><a href="{% url 'ensayoclinico_create' %}">Ensayo Clinico - CREATE</a></li>
-        <li><a href="{% url 'ensayosclinicos_listar' %}">Ensayo Clinico - READ - Lista</a></li>
-        <li><a href="{% url 'ensayoclinico_buscar_avanzado' %}">Ensayo Clinico - READ - Filtro avanzado</a></li>
-        <li><a href="{% url 'ensayosclinicos_listar' %}">Ensayo Clinico - UPDATE</a></li>
-        <li><a href="{% url 'ensayosclinicos_listar' %}">Ensayo Clinico - DELETE</a></li>
-    </ul>
-
-    <br>
-    <hr>
-
-    <p>URLs</p>
-    <ul>
-        <li><a href="{% url 'usuarios_listar' %}">Lista Usuarios</a></li>
-        <li><a href="{% url 'ensayosclinicos_listar' %}">Lista Ensayos Clinicos</a></li>
-    </ul>
-
-
+        <!-- Tabla de Clasificación Novedosa -->
+        <div class="col-lg-5">
+            <div class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-success mb-3 fw-bold"><i class="bi bi-trophy-fill"></i> Ranking Global</h3>
+                    <p class="text-muted small">Puntuaciones totales acumuladas por los jugadores registrados.</p>
+                    
+                    <div class="table-responsive mt-3" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th scope="col" style="width: 60px;">Pos</th>
+                                    <th scope="col">Jugador</th>
+                                    <th scope="col" class="text-end">Puntos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if ranking %}
+                                    {% for jugador in ranking %}
+                                        <tr {% if jugador.username == request.user.username %}class="table-warning fw-bold"{% endif %}>
+                                            <td>
+                                                {% if forloop.counter == 1 %}
+                                                    🥇
+                                                {% elif forloop.counter == 2 %}
+                                                    🥈
+                                                {% elif forloop.counter == 3 %}
+                                                    🥉
+                                                {% else %}
+                                                    {{ forloop.counter }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ jugador.username }}
+                                                {% if jugador.username == request.user.username %}
+                                                    <span class="badge bg-dark text-warning ms-1">Tú</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end text-success fw-bold">{{ jugador.total_score }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-muted">Aún no hay puntuaciones guardadas. ¡Sé el primero!</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
-

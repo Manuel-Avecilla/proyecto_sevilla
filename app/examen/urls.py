@@ -1,47 +1,24 @@
-# ============================================================
-# region Importaciones
-# ============================================================
-
 from django.urls import path
+from django.contrib.auth.views import LogoutView
 from . import views
 from .views import MiLoginView
 
-# endregion
-# ============================================================
-
-
 urlpatterns = [
-    
     #---HOME---
-    path('',views.home, name='home'),
+    path('', views.home, name='home'),
     
-    
+    #---GAME PAGE---
+    path('jugar/', views.jugar_ruleta, name='jugar_ruleta'),
+
     #---REGISTRO-LOGIN---
-    
-    # Registro
-    path('registro/usuario',views.registrar_usuario,name='registrar_usuario'),
-    
-    # Login
+    path('registro/usuario', views.registrar_usuario, name='registrar_usuario'),
     path('accounts/login/', MiLoginView.as_view(), name='login'),
+    path('accounts/logout/', LogoutView.as_view(next_page='home'), name='logout'),
 
-
-    #---Usuario---
-    #---------Detalles-Lista---------
-    path('usuario/listar', views.usuarios_listar, name='usuarios_listar'),
-    path('usuario/<int:id_usuario>', views.dame_usuario, name='dame_usuario'),
-    
-    #---Ensayo-Clinico---
-    #---------Detalles-Lista---------
-    path('ensayoclinico/listar', views.ensayosclinicos_listar, name='ensayosclinicos_listar'),
-    path('ensayoclinico/<int:id_ensayoclinico>', views.dame_ensayoclinico, name='dame_ensayoclinico'),
-    #--------------CRUD--------------
-    path('ensayoclinico/crear/',views.ensayoclinico_create, name='ensayoclinico_create'),
-    path('ensayoclinico/buscar/avanzado/',views.ensayoclinico_buscar_avanzado, name='ensayoclinico_buscar_avanzado'),
-    path('ensayoclinico/editar/<int:id_ensayoclinico>', views.ensayoclinico_editar, name="ensayoclinico_editar"),
-    path('ensayoclinico/eliminar/<int:id_ensayoclinico>', views.ensayoclinico_eliminar, name="ensayoclinico_eliminar"),
-    
-    
-    
-    
-    #---CRUD---
+    #---APIs for Ruleta Sevillana (Fetch SPA compatible)---
+    path('api/register', views.api_register, name='api_register'),
+    path('api/login', views.api_login, name='api_login'),
+    path('api/questions', views.api_questions, name='api_questions'),
+    path('api/save-score', views.api_save_score, name='api_save_score'),
+    path('api/ranking', views.api_ranking, name='api_ranking'),
 ]

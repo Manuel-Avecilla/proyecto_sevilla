@@ -1,0 +1,362 @@
+[
+  {
+    "model": "examen.pregunta",
+    "pk": 1,
+    "fields": {
+      "category": "Monumento",
+      "phrase": "LA GIRALDA",
+      "clue": "Antiguo alminar y símbolo de Sevilla."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 2,
+    "fields": {
+      "category": "Lugar histórico",
+      "phrase": "ARCHIVO DE INDIAS",
+      "clue": "Edificio clave para la historia de los viajes a América."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 3,
+    "fields": {
+      "category": "Barrio",
+      "phrase": "BARRIO DE SANTA CRUZ",
+      "clue": "Zona de calles estrechas y patios con mucho encanto."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 4,
+    "fields": {
+      "category": "Monumento junto al río",
+      "phrase": "TORRE DEL ORO",
+      "clue": "Torre defensiva situada al lado del Guadalquivir."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 5,
+    "fields": {
+      "category": "Plaza emblemática",
+      "phrase": "PLAZA DE ESPAÑA",
+      "clue": "Gran plaza construida para la Exposición Iberoamericana de 1929."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 6,
+    "fields": {
+      "category": "Cultura sevillana",
+      "phrase": "FERIA DE ABRIL",
+      "clue": "Fiesta popular con casetas, música y trajes tradicionales."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 7,
+    "fields": {
+      "category": "Monumento",
+      "phrase": "CATEDRAL DE SEVILLA",
+      "clue": "Uno de los templos góticos más conocidos del mundo."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 8,
+    "fields": {
+      "category": "Palacio",
+      "phrase": "REAL ALCAZAR",
+      "clue": "Conjunto palaciego con jardines muy visitados."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 9,
+    "fields": {
+      "category": "Barrio",
+      "phrase": "BARRIO DE TRIANA",
+      "clue": "Barrio famoso por su cerámica, flamenco y ambiente junto al río."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 10,
+    "fields": {
+      "category": "Puente",
+      "phrase": "PUENTE DE TRIANA",
+      "clue": "Conecta el centro con uno de los barrios más conocidos de la ciudad."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 11,
+    "fields": {
+      "category": "Río",
+      "phrase": "RIO GUADALQUIVIR",
+      "clue": "Río que atraviesa Sevilla y marca parte de su historia comercial."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 12,
+    "fields": {
+      "category": "Calle famosa",
+      "phrase": "CALLE SIERPES",
+      "clue": "Una de las calles comerciales más conocidas del centro."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 13,
+    "fields": {
+      "category": "Parque",
+      "phrase": "PARQUE DE MARIA LUISA",
+      "clue": "Gran zona verde cercana a la Plaza de España."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 14,
+    "fields": {
+      "category": "Edificio moderno",
+      "phrase": "METROPOL PARASOL",
+      "clue": "Estructura moderna conocida popularmente como Las Setas."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 15,
+    "fields": {
+      "category": "Mercado",
+      "phrase": "MERCADO DE TRIANA",
+      "clue": "Mercado situado en una zona muy popular junto al río."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 16,
+    "fields": {
+      "category": "Museo",
+      "phrase": "MUSEO DE BELLAS ARTES",
+      "clue": "Museo importante para conocer pintura y arte sevillano."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 17,
+    "fields": {
+      "category": "Tradición",
+      "phrase": "SEMANA SANTA",
+      "clue": "Celebración religiosa con procesiones muy conocidas."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 18,
+    "fields": {
+      "category": "Tradición",
+      "phrase": "FLAMENCO SEVILLANO",
+      "clue": "Arte musical y de baile muy asociado a Andalucía."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 19,
+    "fields": {
+      "category": "Gastronomía",
+      "phrase": "PESCADO FRITO",
+      "clue": "Plato típico que se puede encontrar en muchos bares andaluces."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 20,
+    "fields": {
+      "category": "Gastronomía",
+      "phrase": "SALMOREJO Y CROQUETAS",
+      "clue": "Dos clásicos que suelen aparecer en cartas de tapas."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 21,
+    "fields": {
+      "category": "Equipo de fútbol",
+      "phrase": "REAL BETIS BALOMPIE",
+      "clue": "Club sevillano de color verdiblanco."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 22,
+    "fields": {
+      "category": "Equipo de fútbol",
+      "phrase": "SEVILLA FUTBOL CLUB",
+      "clue": "Club sevillano de color rojiblanco."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 23,
+    "fields": {
+      "category": "Universidad",
+      "phrase": "UNIVERSIDAD DE SEVILLA",
+      "clue": "Institución educativa con edificios históricos en la ciudad."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 24,
+    "fields": {
+      "category": "Plaza",
+      "phrase": "PLAZA NUEVA",
+      "clue": "Plaza céntrica cercana al Ayuntamiento."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 25,
+    "fields": {
+      "category": "Barrio",
+      "phrase": "LOS REMEDIOS",
+      "clue": "Barrio relacionado con el recinto de la Feria de Abril."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 26,
+    "fields": {
+      "category": "Monumento",
+      "phrase": "PALACIO DE SAN TELMO",
+      "clue": "Edificio barroco cercano al río y a la Universidad."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 27,
+    "fields": {
+      "category": "Fiesta",
+      "phrase": "ALUMBRADO DE LA FERIA",
+      "clue": "Momento que marca el inicio visual de la Feria de Abril."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 28,
+    "fields": {
+      "category": "Transporte",
+      "phrase": "TRANVIA DE SEVILLA",
+      "clue": "Medio de transporte que recorre parte del centro."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 29,
+    "fields": {
+      "category": "Lugar histórico",
+      "phrase": "HOSPITAL DE LOS VENERABLES",
+      "clue": "Edificio histórico situado en el Barrio de Santa Cruz."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 30,
+    "fields": {
+      "category": "Jardines",
+      "phrase": "JARDINES DE MURILLO",
+      "clue": "Jardines situados junto al casco histórico y Santa Cruz."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 31,
+    "fields": {
+      "category": "Zona monumental",
+      "phrase": "PUERTA DE JEREZ",
+      "clue": "Zona céntrica cercana al río, la Catedral y el Alcázar."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 32,
+    "fields": {
+      "category": "Avenida",
+      "phrase": "AVENIDA DE LA CONSTITUCION",
+      "clue": "Avenida principal donde pasan el tranvía y muchas rutas turísticas."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 33,
+    "fields": {
+      "category": "Torre moderna",
+      "phrase": "TORRE SEVILLA",
+      "clue": "Rascacielos moderno situado en la Isla de la Cartuja."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 34,
+    "fields": {
+      "category": "Isla",
+      "phrase": "ISLA DE LA CARTUJA",
+      "clue": "Zona vinculada a la Expo del 92, tecnología y ocio."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 35,
+    "fields": {
+      "category": "Evento histórico",
+      "phrase": "EXPO DEL NOVENTA Y DOS",
+      "clue": "Exposición universal que transformó parte de Sevilla."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 36,
+    "fields": {
+      "category": "Teatro",
+      "phrase": "TEATRO DE LA MAESTRANZA",
+      "clue": "Espacio cultural situado cerca de la Torre del Oro."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 37,
+    "fields": {
+      "category": "Plaza de toros",
+      "phrase": "PLAZA DE LA MAESTRANZA",
+      "clue": "Edificio taurino muy conocido junto al río."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 38,
+    "fields": {
+      "category": "Iglesia",
+      "phrase": "BASILICA DE LA MACARENA",
+      "clue": "Templo vinculado a una de las hermandades más conocidas."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 39,
+    "fields": {
+      "category": "Muralla",
+      "phrase": "MURALLAS DE LA MACARENA",
+      "clue": "Restos defensivos históricos situados al norte del casco antiguo."
+    }
+  },
+  {
+    "model": "examen.pregunta",
+    "pk": 40,
+    "fields": {
+      "category": "Alameda",
+      "phrase": "ALAMEDA DE HERCULES",
+      "clue": "Zona de ocio con columnas y mucha vida social."
+    }
+  }
+]

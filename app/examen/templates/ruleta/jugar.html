@@ -1,0 +1,840 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Ruleta Sevillana - Juego{% endblock %}
+
+{% block contenido %}
+<div class="ruleta-game-container p-4 rounded-4 shadow-lg text-white" style="background: linear-gradient(135deg, #0f172a, #1e293b, #111827);">
+  <style>
+    :root {
+      --bg: #121826;
+      --panel: #1f2937;
+      --accent: #f59e0b;
+      --accent2: #22c55e;
+      --danger: #ef4444;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --card: #111827;
+      --border: #374151;
+    }
+
+    .ruleta-game-container * {
+      box-sizing: border-box;
+    }
+
+    .ruleta-game-container h1, .ruleta-game-container h2, .ruleta-game-container h3 {
+      margin-top: 0;
+    }
+
+    .ruleta-game-container h1 {
+      text-align: center;
+      color: var(--accent);
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .ruleta-game-container .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .ruleta-game-container .screen {
+      display: none;
+    }
+
+    .ruleta-game-container .screen.active {
+      display: block;
+    }
+
+    .ruleta-game-container .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .ruleta-game-container .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      color: var(--text);
+    }
+
+    .ruleta-game-container label {
+      display: block;
+      margin: 12px 0 6px;
+      color: #d1d5db;
+      font-weight: bold;
+    }
+
+    .ruleta-game-container input, .ruleta-game-container button {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 1rem;
+    }
+
+    .ruleta-game-container input {
+      background: #0b1220;
+      color: var(--text);
+    }
+
+    .ruleta-game-container button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #111827;
+      border: none;
+      font-weight: bold;
+      transition: .2s;
+      margin-top: 8px;
+    }
+
+    .ruleta-game-container button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .ruleta-game-container button.secondary {
+      background: #334155;
+      color: var(--text);
+    }
+
+    .ruleta-game-container button.good {
+      background: var(--accent2);
+      color: #052e16;
+    }
+
+    .ruleta-game-container button.bad {
+      background: var(--danger);
+      color: white;
+    }
+
+    .ruleta-game-container button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .ruleta-game-container .players {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .ruleta-game-container .player {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      position: relative;
+    }
+
+    .ruleta-game-container .player.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, .3);
+    }
+
+    .ruleta-game-container .player .name {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .ruleta-game-container .player .score {
+      font-size: 1.5rem;
+      color: var(--accent2);
+      margin-top: 6px;
+    }
+
+    .ruleta-game-container .turn-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #111827;
+      font-size: .8rem;
+      font-weight: bold;
+    }
+
+    .ruleta-game-container .category {
+      text-align: center;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .ruleta-game-container .board {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 24px 0;
+      padding: 18px;
+      background: #0b1220;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+    }
+
+    .ruleta-game-container .tile {
+      width: 44px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      background: #f8fafc;
+      color: #111827;
+      border-bottom: 5px solid #cbd5e1;
+    }
+
+    .ruleta-game-container .tile.blank {
+      background: transparent;
+      border: none;
+      width: 24px;
+    }
+
+    .ruleta-game-container .tile.hidden {
+      background: #1f2937;
+      color: transparent;
+      border: 2px solid #475569;
+      border-bottom: 5px solid #334155;
+    }
+
+    .ruleta-game-container .controls {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .ruleta-game-container .wheel-box {
+      text-align: center;
+    }
+
+    .ruleta-game-container .wheel {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: conic-gradient(#f59e0b 0 45deg, #22c55e 45deg 90deg, #38bdf8 90deg 135deg, #ef4444 135deg 180deg, #a855f7 180deg 225deg, #eab308 225deg 270deg, #14b8a6 270deg 315deg, #f97316 315deg 360deg);
+      border: 8px solid #f8fafc;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+      transition: transform 1s ease-out;
+    }
+
+    .ruleta-game-container .wheel span {
+      background: rgba(17, 24, 39, .9);
+      color: white;
+      padding: 16px;
+      border-radius: 18px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      max-width: 150px;
+    }
+
+    .ruleta-game-container .message {
+      min-height: 48px;
+      padding: 14px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: #e5e7eb;
+      margin-top: 14px;
+    }
+
+    .ruleta-game-container .letters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .ruleta-game-container .letters button {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 10px;
+      background: #334155;
+      color: white;
+    }
+
+    .ruleta-game-container .letters button.used {
+      background: #111827;
+      color: #6b7280;
+      text-decoration: line-through;
+    }
+
+    .ruleta-game-container .small {
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.45;
+    }
+
+    .ruleta-game-container .top-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .ruleta-game-container .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .ruleta-game-container .ranking-table th, .ruleta-game-container .ranking-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+    }
+
+    .ruleta-game-container .ranking-table th {
+      color: var(--accent);
+    }
+
+    .ruleta-game-container .userbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 850px) {
+      .ruleta-game-container .grid, .ruleta-game-container .controls {
+        grid-template-columns: 1fr;
+      }
+      .ruleta-game-container .tile {
+        width: 34px;
+        height: 44px;
+        font-size: 1.2rem;
+      }
+      .ruleta-game-container .wheel {
+        width: 180px;
+        height: 180px;
+      }
+      .ruleta-game-container .userbar {
+        display: block;
+      }
+    }
+  </style>
+
+  <h1>🎡 Ruleta Sevillana</h1>
+  <p class="subtitle">Concurso de paneles interactivo en red local</p>
+
+  <!-- Pantalla de Login / Registro -->
+  <section id="loginScreen" class="screen active">
+    <div class="grid">
+      <div class="card">
+        <h2>Iniciar sesión</h2>
+        <label for="loginUsername">Usuario</label>
+        <input id="loginUsername" placeholder="Nombre de usuario">
+        <label for="loginPassword">Contraseña</label>
+        <input id="loginPassword" type="password" placeholder="Contraseña">
+        <button class="good" id="loginBtn">Entrar</button>
+      </div>
+
+      <div class="card">
+        <h2>Registrarse</h2>
+        <label for="registerUsername">Usuario nuevo</label>
+        <input id="registerUsername" placeholder="Mínimo 3 caracteres">
+        <label for="registerPassword">Contraseña</label>
+        <input id="registerPassword" type="password" placeholder="Mínimo 4 caracteres">
+        <button id="registerBtn">Crear cuenta</button>
+        <p class="small mt-3 mb-0">Los usuarios y contraseñas se guardan de forma segura en la base de datos de Django.</p>
+      </div>
+    </div>
+    <div id="authMessage" class="message">Regístrate o inicia sesión para jugar.</div>
+  </section>
+
+  <!-- Pantalla de Juego -->
+  <section id="gameScreen" class="screen">
+    <div class="userbar">
+      <div>
+        <strong>Usuario conectado:</strong> <span id="loggedUser" class="text-warning"></span>
+        <span class="small text-muted"> | Puntuación total acumulada: <span id="savedScore" class="text-success fw-bold">0</span> pts</span>
+      </div>
+      <button class="secondary" id="logoutBtn" style="width:auto; margin-top:0">Cerrar sesión</button>
+    </div>
+
+    <div id="playersPanel" class="players"></div>
+
+    <div class="card mb-4">
+      <h2 id="roundTitle" class="text-center text-warning">Panel 1</h2>
+      <p id="category" class="category fw-bold"></p>
+      <div id="board" class="board"></div>
+    </div>
+
+    <div class="controls">
+      <div class="card">
+        <h2>Acciones</h2>
+        <p><strong>Jugador actual:</strong> <span id="currentPlayerName" class="text-warning"></span></p>
+        <p><strong>Valor actual de la ruleta:</strong> <span id="currentWheelValue" class="badge bg-secondary p-2">Sin girar</span></p>
+
+        <label for="letterInput">Consonante o Vocal</label>
+        <input id="letterInput" maxlength="1" placeholder="Introduce una letra"/>
+        <button id="guessBtn" disabled>Probar consonante</button>
+        <button id="buyVowelBtn" class="secondary">Comprar vocal (-50)</button>
+
+        <label for="solveInput">Resolver panel</label>
+        <input id="solveInput" placeholder="Escribe la frase completa"/>
+        <button id="solveBtn" class="good">Resolver</button>
+
+        <div id="message" class="message">Carga la partida para empezar.</div>
+        <div id="letters" class="letters"></div>
+      </div>
+
+      <div class="card wheel-box">
+        <h2>Ruleta</h2>
+        <div id="wheel" class="wheel"><span>GIRA</span></div>
+        <button id="spinBtn">Girar ruleta</button>
+        <div class="top-actions">
+          <button id="nextPanelBtn" class="secondary" style="display:none">Siguiente panel</button>
+          <button id="finishBtn" class="bad">Guardar y terminar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pantalla de Resultados -->
+  <section id="endScreen" class="screen">
+    <div class="card">
+      <h2 class="text-center text-warning"><i class="bi bi-award"></i> Partida Finalizada</h2>
+      <div id="finalRanking"></div>
+      <button id="playAgainBtn" class="good">Jugar otra vez</button>
+      <a href="{% url 'home' %}" class="btn btn-secondary w-100 mt-2 text-center text-decoration-none fw-bold" style="padding:12px 14px; border-radius:12px">Volver al Inicio</a>
+    </div>
+  </section>
+</div>
+
+<script>
+  let panels = [];
+  const wheelValues = [100, 150, 200, 250, 300, 400, 500, "PIERDE TURNO", "QUIEBRA"];
+  const vowels = ["A","E","I","O","U"];
+  const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+
+  let currentUser = null;
+  let players = [];
+  let currentPlayer = 0;
+  let currentPanel = 0;
+  let usedLetters = [];
+  let currentWheelValue = null;
+  let canGuess = false;
+  let wheelRotation = 0;
+
+  const $ = id => document.getElementById(id);
+
+  $("registerBtn").addEventListener("click", register);
+  $("loginBtn").addEventListener("click", login);
+  $("logoutBtn").addEventListener("click", logout);
+  $("spinBtn").addEventListener("click", spinWheel);
+  $("guessBtn").addEventListener("click", guessLetter);
+  $("buyVowelBtn").addEventListener("click", buyVowel);
+  $("solveBtn").addEventListener("click", solvePanel);
+  $("finishBtn").addEventListener("click", finishGame);
+  $("nextPanelBtn").addEventListener("click", nextPanel);
+  $("playAgainBtn").addEventListener("click", startGame);
+
+  async function api(url, options = {}) {
+    const response = await fetch(url, {
+      headers: { "Content-Type": "application/json" },
+      ...options
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Error de servidor");
+    }
+
+    return data;
+  }
+
+  async function register() {
+    try {
+      await api("/api/register", {
+        method: "POST",
+        body: JSON.stringify({
+          username: $("registerUsername").value,
+          password: $("registerPassword").value
+        })
+      });
+      $("authMessage").textContent = "Usuario registrado. Ahora puedes iniciar sesión.";
+    } catch (error) {
+      $("authMessage").textContent = error.message;
+    }
+  }
+
+  async function login() {
+    try {
+      const data = await api("/api/login", {
+        method: "POST",
+        body: JSON.stringify({
+          username: $("loginUsername").value,
+          password: $("loginPassword").value
+        })
+      });
+
+      currentUser = data.user;
+      localStorage.setItem("ruletaUser", JSON.stringify(currentUser));
+      // Refresh the page so Django session state is reloaded and header is updated
+      window.location.reload();
+    } catch (error) {
+      $("authMessage").textContent = error.message;
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("ruletaUser");
+    currentUser = null;
+    window.location.href = "{% url 'logout' %}";
+  }
+
+  async function loadQuestions() {
+    panels = await api("/api/questions");
+    if (!panels.length) {
+      throw new Error("No hay preguntas en la base de datos.");
+    }
+    panels = panels.map(q => ({
+      category: q.category,
+      phrase: normalizeText(q.phrase),
+      clue: q.clue
+    }));
+  }
+
+  async function startGame() {
+    try {
+      // Prioritize the Django session user injected dynamically
+      {% if request.user.is_authenticated %}
+      currentUser = {
+        id: {{ request.user.id }},
+        username: "{{ request.user.username }}",
+        total_score: {{ request.user.total_score }}
+      };
+      localStorage.setItem("ruletaUser", JSON.stringify(currentUser));
+      {% else %}
+      if (!currentUser) {
+        const saved = localStorage.getItem("ruletaUser");
+        if (saved) currentUser = JSON.parse(saved);
+      }
+      {% endif %}
+
+      if (!currentUser) {
+        showScreen("loginScreen");
+        return;
+      }
+
+      await loadQuestions();
+
+      players = [{ name: currentUser.username, score: 0, userId: currentUser.id }];
+      currentPlayer = 0;
+      currentPanel = 0;
+      usedLetters = [];
+      currentWheelValue = null;
+      canGuess = false;
+
+      $("loggedUser").textContent = currentUser.username;
+      $("savedScore").textContent = currentUser.total_score ?? 0;
+
+      showScreen("gameScreen");
+      unlockRound();
+      renderAll();
+      setMessage("Paneles cargados correctamente. ¡Gira la ruleta para empezar!");
+    } catch (error) {
+      $("authMessage").textContent = error.message;
+      showScreen("loginScreen");
+    }
+  }
+
+  function normalizeText(text){
+    return String(text)
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/Ñ/g, "Ñ")
+      .trim();
+  }
+
+  function renderAll(){
+    renderPlayers();
+    renderBoard();
+    renderLetters();
+    updateControls();
+    const panel = panels[currentPanel];
+    $("roundTitle").textContent = `Panel ${currentPanel + 1} de ${panels.length}`;
+    $("category").textContent = `${panel.category}: ${panel.clue}`;
+    $("currentPlayerName").textContent = players[currentPlayer].name;
+    $("currentWheelValue").textContent = typeof currentWheelValue === "number" ? currentWheelValue + " pts" : (currentWheelValue ?? "Sin girar");
+  }
+
+  function renderPlayers(){
+    $("playersPanel").innerHTML = players.map((p,i) => `
+      <div class="player ${i === currentPlayer ? "active" : ""}">
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="score">${p.score} pts</div>
+        ${i === currentPlayer ? '<span class="turn-badge">Turno actual</span>' : ''}
+      </div>
+    `).join("");
+  }
+
+  function renderBoard(){
+    const phrase = panels[currentPanel].phrase;
+    $("board").innerHTML = phrase.split("").map(ch => {
+      if(ch === " ") return `<div class="tile blank"></div>`;
+      if(!/[A-ZÑ]/.test(ch)) return `<div class="tile">${ch}</div>`;
+      const visible = usedLetters.includes(ch);
+      return `<div class="tile ${visible ? "" : "hidden"}">${visible ? ch : "?"}</div>`;
+    }).join("");
+  }
+
+  function renderLetters(){
+    $("letters").innerHTML = alphabet.map(l => `
+      <button class="${usedLetters.includes(l) ? "used" : ""}" onclick="quickLetter('${l}')" ${usedLetters.includes(l) ? "disabled" : ""}>${l}</button>
+    `).join("");
+  }
+
+  window.quickLetter = function(letter){
+    $("letterInput").value = letter;
+  }
+
+  function spinWheel(){
+    const value = wheelValues[Math.floor(Math.random() * wheelValues.length)];
+    currentWheelValue = value;
+    wheelRotation += 720 + Math.floor(Math.random() * 720);
+    $("wheel").style.transform = `rotate(${wheelRotation}deg)`;
+
+    if(value === "PIERDE TURNO"){
+      setMessage(`${players[currentPlayer].name} pierde el turno.`);
+      canGuess = false;
+    } else if(value === "QUIEBRA"){
+      players[currentPlayer].score = 0;
+      setMessage(`¡Quiebra! ${players[currentPlayer].name} pierde todos sus puntos de la partida.`);
+      canGuess = false;
+    } else {
+      canGuess = true;
+      setMessage(`La ruleta marca ${value} puntos. Elige una consonante.`);
+    }
+
+    renderAll();
+  }
+
+  function guessLetter(){
+    const letter = normalizeText($("letterInput").value);
+    if(!canGuess || typeof currentWheelValue !== "number"){
+      setMessage("Primero debes girar la ruleta.");
+      return;
+    }
+    if(!letter || letter.length !== 1 || !alphabet.includes(letter)){
+      setMessage("Introduce una letra válida.");
+      return;
+    }
+    if(vowels.includes(letter)){
+      setMessage("Las vocales se compran. Usa el botón de comprar vocal.");
+      return;
+    }
+    processLetter(letter, currentWheelValue, false);
+  }
+
+  function buyVowel(){
+    const letter = normalizeText($("letterInput").value);
+    if(!letter || !vowels.includes(letter)){
+      setMessage("Para comprar, introduce una vocal: A, E, I, O, U.");
+      return;
+    }
+    if(players[currentPlayer].score < 50){
+      setMessage("No tienes suficientes puntos en esta partida para comprar una vocal.");
+      return;
+    }
+    players[currentPlayer].score -= 50;
+    processLetter(letter, 0, true);
+  }
+
+  function processLetter(letter, value, isVowel){
+    if(usedLetters.includes(letter)){
+      setMessage("Esa letra ya se ha usado.");
+      return;
+    }
+
+    usedLetters.push(letter);
+    const phrase = panels[currentPanel].phrase;
+    const occurrences = phrase.split("").filter(ch => ch === letter).length;
+
+    if(occurrences > 0){
+      const gained = occurrences * value;
+      players[currentPlayer].score += gained;
+      setMessage(
+        isVowel
+          ? `La vocal ${letter} aparece ${occurrences} vez/veces.`
+          : `¡Bien! La letra ${letter} aparece ${occurrences} vez/veces. Ganas ${gained} puntos.`
+      );
+    } else {
+      const penalty = isVowel ? 0 : Math.max(50, Math.floor(Number(currentWheelValue || 100) / 2));
+      players[currentPlayer].score = Math.max(0, players[currentPlayer].score - penalty);
+      setMessage(
+        isVowel
+          ? `La vocal ${letter} no aparece.`
+          : `La letra ${letter} no aparece. Pierdes ${penalty} puntos.`
+      );
+    }
+
+    $("letterInput").value = "";
+    currentWheelValue = null;
+    canGuess = false;
+    checkPanelCompleted();
+    renderAll();
+  }
+
+  function solvePanel(){
+    const answer = normalizeText($("solveInput").value);
+    const correct = normalizeText(panels[currentPanel].phrase);
+
+    if(!answer){
+      setMessage("Escribe una respuesta para resolver.");
+      return;
+    }
+
+    if(answer === correct){
+      players[currentPlayer].score += 500;
+      usedLetters = [...new Set(panels[currentPanel].phrase.split("").filter(ch => /[A-ZÑ]/.test(ch)))];
+      setMessage(`¡Correcto! Ganas 500 puntos extra.`);
+      $("nextPanelBtn").style.display = "block";
+      lockRound();
+    } else {
+      players[currentPlayer].score = Math.max(0, players[currentPlayer].score - 200);
+      setMessage(`Respuesta incorrecta. Pierdes 200 puntos.`);
+    }
+
+    $("solveInput").value = "";
+    renderAll();
+  }
+
+  function checkPanelCompleted(){
+    const phraseLetters = [...new Set(panels[currentPanel].phrase.split("").filter(ch => /[A-ZÑ]/.test(ch)))];
+    const completed = phraseLetters.every(ch => usedLetters.includes(ch));
+    if(completed){
+      players[currentPlayer].score += 300;
+      setMessage(`Panel completado. Ganas 300 puntos extra.`);
+      $("nextPanelBtn").style.display = "block";
+      lockRound();
+    }
+  }
+
+  function lockRound(){
+    canGuess = false;
+    $("spinBtn").disabled = true;
+    $("guessBtn").disabled = true;
+    $("buyVowelBtn").disabled = true;
+    $("solveBtn").disabled = true;
+  }
+
+  function unlockRound(){
+    $("spinBtn").disabled = false;
+    $("buyVowelBtn").disabled = false;
+    $("solveBtn").disabled = false;
+    updateControls();
+  }
+
+  function nextPanel(){
+    currentPanel++;
+    if(currentPanel >= panels.length){
+      finishGame();
+      return;
+    }
+    usedLetters = [];
+    currentWheelValue = null;
+    canGuess = false;
+    $("nextPanelBtn").style.display = "none";
+    unlockRound();
+    renderAll();
+    setMessage("Nuevo panel cargado. ¡Gira la ruleta para empezar!");
+  }
+
+  async function finishGame(){
+    try {
+      const score = players[0].score;
+      await api("/api/save-score", {
+        method: "POST",
+        body: JSON.stringify({
+          userId: currentUser.id,
+          score
+        })
+      });
+
+      currentUser.total_score = Number(currentUser.total_score || 0) + score;
+      localStorage.setItem("ruletaUser", JSON.stringify(currentUser));
+
+      await endGame();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function endGame(){
+    showScreen("endScreen");
+    const ranking = await api("/api/ranking");
+    $("finalRanking").innerHTML = `
+      <p class="text-center fs-5">Tu puntuación de esta partida (${players[0].score} pts) se ha guardado en la base de datos.</p>
+      <h4 class="mt-4 text-warning">Clasificación Global:</h4>
+      <table class="ranking-table table table-dark table-hover table-striped">
+        <thead>
+          <tr>
+            <th>Posición</th>
+            <th>Usuario</th>
+            <th>Puntos totales</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ranking.map((p,i) => `
+            <tr ${p.username === currentUser.username ? 'class="table-warning text-dark fw-bold"' : ''}>
+              <td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+              <td>${escapeHtml(p.username)} ${p.username === currentUser.username ? '<span class="badge bg-dark text-warning ms-1">Tú</span>' : ''}</td>
+              <td>${p.total_score}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function updateControls(){
+    $("guessBtn").disabled = !canGuess;
+    $("currentPlayerName").textContent = players[currentPlayer]?.name || "";
+    $("currentWheelValue").textContent = typeof currentWheelValue === "number" ? currentWheelValue + " pts" : (currentWheelValue ?? "Sin girar");
+  }
+
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    $(id).classList.add("active");
+  }
+
+  function setMessage(text){
+    $("message").textContent = text;
+  }
+
+  function escapeHtml(text){
+    return String(text).replace(/[&<>"']/g, char => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[char]));
+  }
+
+  // Start initialization
+  startGame();
+</script>
+{% endblock %}

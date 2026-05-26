@@ -773,8 +773,11 @@
     if (lastTurnUser === activeUsername) return;
     lastTurnUser = activeUsername;
 
+    const modalEl = document.getElementById("turnNotificationModal");
+
     if (isActiveUser) {
       // Es mi turno!
+      modalEl?.classList.remove("non-blocking");
       $("turnIconContainer").innerHTML = `<i class="bi bi-star-fill text-warning display-1 animate__animated animate__bounceIn"></i>`;
       $("turnTitle").textContent = "¡Es tu turno!";
       $("turnMessage").textContent = "Gira la ruleta o intenta resolver el panel.";
@@ -787,6 +790,7 @@
       }, 2000);
     } else {
       // Turno de otro concursante
+      modalEl?.classList.add("non-blocking");
       $("turnIconContainer").innerHTML = `<i class="bi bi-clock-history text-primary display-1 animate__animated animate__pulse animate__infinite"></i>`;
       $("turnTitle").textContent = `Turno de ${activeUsername}`;
       $("turnMessage").textContent = "Esperando a que realice su jugada...";

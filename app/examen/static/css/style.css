@@ -545,3 +545,98 @@ input:focus, select:focus, textarea:focus, .form-control:focus {
   height: clamp(30px, 4.2vw, 38px) !important;
   text-decoration: line-through;
 }
+
+/* ==========================================================================
+   Multiplayer Non-Blocking Turn Waiting Widget
+   ========================================================================== */
+
+/* Cuando el modal de turno es no bloqueante (esperando turno de otro concursante) */
+#turnNotificationModal.non-blocking {
+  pointer-events: none !important;
+  background-color: transparent !important;
+}
+
+#turnNotificationModal.non-blocking .modal-dialog {
+  pointer-events: auto !important;
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  margin: 0 !important;
+  width: 320px !important;
+  max-width: 320px !important;
+  z-index: 1055 !important;
+  transition: all 0.3s ease !important;
+}
+
+#turnNotificationModal.non-blocking .modal-content {
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--border-color) !important;
+  border-left: 4px solid var(--accent-indigo) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 12px !important;
+}
+
+#turnNotificationModal.non-blocking .modal-body {
+  padding: 12px 16px !important;
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 12px !important;
+  row-gap: 2px !important;
+  align-items: center !important;
+  text-align: left !important;
+}
+
+#turnNotificationModal.non-blocking #turnIconContainer {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+  margin: 0 !important;
+}
+
+#turnNotificationModal.non-blocking #turnIconContainer i {
+  font-size: 2rem !important;
+  margin: 0 !important;
+}
+
+#turnNotificationModal.non-blocking h2 {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  font-size: 0.95rem !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  color: var(--text-main) !important;
+}
+
+#turnNotificationModal.non-blocking p {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  font-size: 0.8rem !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  color: var(--text-muted) !important;
+}
+
+/* Ocultar el backdrop de Bootstrap cuando el modal de turno es no bloqueante */
+body:has(#turnNotificationModal.non-blocking) .modal-backdrop {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Forzar que se permita el scroll en el body si el modal activo es el no bloqueante */
+body:has(#turnNotificationModal.non-blocking) {
+  overflow: auto !important;
+  padding-right: 0 !important;
+}
+
+/* Adaptación para pantallas pequeñas (móviles) */
+@media (max-width: 575.98px) {
+  #turnNotificationModal.non-blocking .modal-dialog {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    width: calc(100% - 20px) !important;
+    max-width: calc(100% - 20px) !important;
+  }
+}

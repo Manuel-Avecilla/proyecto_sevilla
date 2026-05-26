@@ -31,11 +31,7 @@ Todos los archivos de configuración se encuentran en el directorio `app/`:
 Para desplegar la aplicación en cualquier servidor Linux (como Ubuntu Server en AWS EC2):
 
 ### 1. Preparación del Servidor
-Asegúrate de tener instalados **Docker** y **Docker Compose**. Si estás en Ubuntu:
-```bash
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose-v2
-```
+Asegúrate de tener instalados **Docker** y **Docker Compose**. Si estás en Ubuntu
 
 ### 2. Navegar al Directorio del Proyecto
 Navega al directorio `app/` donde se ubican las configuraciones de Docker:

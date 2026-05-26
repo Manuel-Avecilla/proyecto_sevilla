@@ -8,11 +8,11 @@ Este proyecto es una migración completa de la aplicación **Ruleta Sevillana** 
 
 #### 1. Clonar el repositorio:
 ```bash
-git clone git@github.com:Manuel-Avecilla/DWS_Examen_Manuel.git
+git clone https://github.com/Manuel-Avecilla/proyecto_sevilla.git
 ```
 #### 2. Acceder al directorio del proyecto:
 ```bash
-cd DWS_Examen_Manuel/app/
+cd proyecto_sevilla/app/
 ```
 #### 3. Crear un entorno virtual:
 ```bash
